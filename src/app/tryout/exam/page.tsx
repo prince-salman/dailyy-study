@@ -1,0 +1,421 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Draggable from "react-draggable";
+
+const examQuestions = [
+  {
+    id: 1,
+    subtest: "Penalaran Umum (PU)",
+    question: "Jika semua burung bisa terbang, dan unta adalah burung, maka kesimpulan yang benar adalah...",
+    options: ["A. Unta tidak bisa terbang", "B. Unta bisa terbang", "C. Unta bukan burung", "D. Tidak ada kesimpulan"],
+    correct: 1,
+    weight: 0.8 // Bobot IRT simulasi (Mudah)
+  },
+  {
+    id: 2,
+    subtest: "Penalaran Umum (PU)",
+    question: "Sinonim dari kata 'Ekskavasi' adalah...",
+    options: ["A. Penggalian", "B. Penimbunan", "C. Penjelajahan", "D. Pelestarian"],
+    correct: 0,
+    weight: 1.2 // Bobot IRT simulasi (Sedang)
+  },
+  {
+    id: 3,
+    subtest: "Penalaran Umum (PU)",
+    question: "Manakah kalimat berikut yang merupakan kalimat pasif?",
+    options: ["A. Budi menendang bola.", "B. Bola ditendang oleh Budi.", "C. Budi sedang bermain bola.", "D. Budi membeli bola baru."],
+    correct: 1,
+    weight: 1.0 // Sedang
+  },
+  {
+    id: 4,
+    subtest: "Pengetahuan Kuantitatif (PK)",
+    question: "Nilai x yang memenuhi persamaan 2x + 5 = 15 adalah...",
+    options: ["A. 5", "B. 10", "C. 15", "D. 20"],
+    correct: 0,
+    weight: 1.5 // Sulit
+  },
+  {
+    id: 5,
+    subtest: "Pengetahuan Kuantitatif (PK)",
+    question: "Sebuah kereta melaju dengan kecepatan 80 km/jam. Jarak yang ditempuh dalam 2,5 jam adalah...",
+    options: ["A. 150 km", "B. 180 km", "C. 200 km", "D. 250 km"],
+    correct: 2,
+    weight: 1.3 // Sulit
+  }
+];
+
+export default function ExamPage() {
+  const router = useRouter();
+  const [currentQ, setCurrentQ] = useState(0);
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [doubtful, setDoubtful] = useState<Record<number, boolean>>({});
+  
+  const [timeLeft, setTimeLeft] = useState(15 * 60);
+
+  const [calcOpen, setCalcOpen] = useState(false);
+  const [calcInput, setCalcInput] = useState("");
+
+  const [cheatWarnings, setCheatWarnings] = useState(0);
+  const [zenMode, setZenMode] = useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const [emotionState, setEmotionState] = useState('Fokus');
+  const [isWebcamActive, setIsWebcamActive] = useState(false);
+
+  const [difficultyMsg, setDifficultyMsg] = useState("");
+  const [warningMsg, setWarningMsg] = useState("");
+  const [sleepAlert, setSleepAlert] = useState(false);
+
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(s => {
+        stream = s;
+        if (videoRef.current) videoRef.current.srcObject = s;
+        setIsWebcamActive(true);
+      })
+      .catch(() => console.error("Kamera tidak diizinkan."));
+
+    const emotionInterval = setInterval(() => {
+      const states = ['Fokus', 'Fokus', 'Fokus', 'Mengantuk', 'Kebingungan'];
+      const nextState = states[Math.floor(Math.random() * states.length)];
+      setEmotionState(nextState);
+      if (nextState === 'Mengantuk') {
+        setSleepAlert(true);
+        setTimeout(() => setSleepAlert(false), 5000);
+      }
+    }, 20000);
+
+    return () => {
+      clearInterval(emotionInterval);
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    };
+  }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("exam_state");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setAnswers(parsed.answers || {});
+        setDoubtful(parsed.doubtful || {});
+        setTimeLeft(parsed.timeLeft || 15 * 60);
+      } catch (e) {}
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setCheatWarnings(prev => {
+          const newW = prev + 1;
+          setWarningMsg(`Peringatan Anti-Cheat (${newW}/3): Anda terdeteksi membuka tab lain!`);
+          setTimeout(() => setWarningMsg(""), 5000);
+          if (newW >= 3) {
+            handleSubmit(true);
+          }
+          return newW;
+        });
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleSubmit(true); // Auto submit
+          return 0;
+        }
+        if (prev % 5 === 0) {
+          localStorage.setItem("exam_state", JSON.stringify({ answers, doubtful, timeLeft: prev }));
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [answers, doubtful]);
+
+  const handleAnswer = (idx: number) => {
+    setAnswers(prev => ({ ...prev, [currentQ]: idx }));
+    if (answers[currentQ] === undefined && currentQ < examQuestions.length - 1) {
+      const isCorrect = idx === examQuestions[currentQ].correct;
+      setDifficultyMsg(isCorrect ? "Jawaban Benar! AI menaikkan tingkat kesulitan soal berikutnya..." : "Jawaban Salah. AI menyesuaikan soal agar lebih mudah dipahami...");
+      setTimeout(() => setDifficultyMsg(""), 3000);
+    }
+  };
+
+  const toggleDoubtful = () => {
+    setDoubtful(prev => ({ ...prev, [currentQ]: !prev[currentQ] }));
+  };
+
+  const handlePause = () => {
+    localStorage.setItem("exam_state", JSON.stringify({ answers, doubtful, timeLeft }));
+    router.push("/tryout");
+  };
+
+  const handleReportError = () => {
+    const reports = JSON.parse(localStorage.getItem("error_reports") || "[]");
+    reports.push({ qId: examQuestions[currentQ]?.id, date: new Date().toISOString() });
+    localStorage.setItem("error_reports", JSON.stringify(reports));
+    setDifficultyMsg("Laporan terkirim ke Admin.");
+    setTimeout(() => setDifficultyMsg(""), 3000);
+  };
+
+  const handleSubmit = (forced = false) => {
+    if (!forced) {
+      localStorage.setItem("exam_state", JSON.stringify({ answers, doubtful, timeLeft }));
+    }
+    let irtScore = 0;
+    let correctCount = 0;
+    const breakdown: Record<string, { correct: number, total: number }> = {};
+
+    examQuestions.forEach((q, idx) => {
+      if (!breakdown[q.subtest]) breakdown[q.subtest] = { correct: 0, total: 0 };
+      breakdown[q.subtest].total += 1;
+
+      if (answers[idx] === q.correct) {
+        correctCount++;
+        irtScore += q.weight * 200;
+        breakdown[q.subtest].correct += 1;
+      }
+    });
+    
+    const finalScore = Math.round(irtScore);
+
+    const result = {
+      id: "to-1",
+      date: new Date().toISOString(),
+      score: finalScore,
+      correct: correctCount,
+      total: examQuestions.length,
+      answers,
+      questions: examQuestions,
+      breakdown
+    };
+    
+    const history = JSON.parse(localStorage.getItem("tryout_history") || "[]");
+    history.push(result);
+    localStorage.setItem("tryout_history", JSON.stringify(history));
+    localStorage.removeItem("exam_state");
+    
+    router.push("/tryout/result");
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  const handleCalcEval = () => {
+    try {
+      setCalcInput(Function('"use strict"; return (' + calcInput + ')')().toString());
+    } catch(e) {
+      setCalcInput("Error");
+    }
+  };
+
+  const question = examQuestions[currentQ];
+  const isPK = question.subtest.includes("Kuantitatif");
+
+  const toggleZenMode = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setZenMode(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        setZenMode(false);
+      }
+    }
+  };
+
+  return (
+    <div className={`min-h-screen bg-slate-900 text-white flex flex-col font-sans selection:bg-indigo-500/30 ${zenMode ? 'fixed inset-0 z-[100]' : ''}`}>
+      <header className="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center sticky top-0 z-50">
+        <div className="font-extrabold flex items-center gap-2">
+          <i className="fas fa-desktop text-indigo-400"></i> CBT SNBT
+        </div>
+        <div className="flex items-center gap-4">
+          <button onClick={toggleZenMode} className={`text-sm font-bold px-3 py-1 rounded transition-colors ${zenMode ? 'bg-indigo-500 text-white' : 'text-slate-400 bg-slate-700 hover:text-white'}`}>
+            <i className={`fas ${zenMode ? 'fa-compress' : 'fa-expand'} mr-1`}></i> Zen Mode
+          </button>
+          <button onClick={handlePause} className="text-slate-400 hover:text-white font-bold text-sm bg-slate-700 px-3 py-1 rounded">
+            <i className="fas fa-pause mr-1"></i> Jeda & Keluar
+          </button>
+          <div className={`font-mono text-xl font-bold px-4 py-1.5 rounded-lg border ${timeLeft < 300 ? 'bg-rose-500/20 text-rose-500 border-rose-500/50 animate-pulse' : 'bg-slate-900 text-emerald-400 border-slate-700'}`}>
+            <i className="fas fa-clock mr-2"></i> {formatTime(timeLeft)}
+          </div>
+        </div>
+      </header>
+
+      {sleepAlert && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-white font-bold px-6 py-3 rounded-2xl shadow-2xl animate-in zoom-in-95 text-sm">
+          AI mendeteksi Anda Mengantuk. Tetap fokus!
+        </div>
+      )}
+      {warningMsg && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-rose-500 text-white font-bold px-6 py-3 rounded-2xl shadow-2xl animate-in zoom-in-95 text-sm max-w-xs text-center">
+          {warningMsg}
+        </div>
+      )}
+      {calcOpen && (
+        <Draggable>
+          <div className="fixed top-24 right-10 bg-slate-800 p-4 rounded-2xl border border-slate-600 shadow-2xl z-50 w-64 cursor-move touch-none">
+            <div className="flex justify-between items-center mb-3">
+              <span className="font-bold text-xs text-slate-400">Kalkulator Virtual</span>
+              <button onClick={() => setCalcOpen(false)} className="text-rose-400"><i className="fas fa-times"></i></button>
+            </div>
+            <input 
+              type="text" 
+              value={calcInput} 
+              readOnly 
+              className="w-full bg-slate-900 text-right p-3 rounded-xl mb-3 font-mono text-xl text-white outline-none"
+            />
+            <div className="grid grid-cols-4 gap-2">
+              {['7','8','9','/','4','5','6','*','1','2','3','-','C','0','.','+'].map(btn => (
+                <button 
+                  key={btn}
+                  onClick={() => btn === 'C' ? setCalcInput("") : setCalcInput(p => p + btn)}
+                  className="bg-slate-700 hover:bg-slate-600 py-2 rounded-lg font-bold"
+                >
+                  {btn}
+                </button>
+              ))}
+              <button onClick={handleCalcEval} className="col-span-4 bg-indigo-600 hover:bg-indigo-500 py-2 rounded-lg font-bold">=</button>
+            </div>
+          </div>
+        </Draggable>
+      )}
+
+      <div className="flex-grow flex flex-col lg:flex-row max-w-6xl mx-auto w-full p-4 lg:p-6 gap-6">
+        
+        <div className="flex-grow flex flex-col bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl relative">
+          {difficultyMsg && (
+            <div className="bg-indigo-500/20 text-indigo-400 p-3 rounded-xl mb-4 font-bold border border-indigo-500/50 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+              <i className="fas fa-robot animate-pulse"></i>
+              {difficultyMsg}
+            </div>
+          )}
+          <div className="flex justify-between items-start mb-6 border-b border-slate-700 pb-4">
+            <div>
+              <div className="text-xs font-bold text-emerald-400 mb-1">{question.subtest}</div>
+              <h2 className="text-xl font-extrabold bg-indigo-500 text-white px-3 py-1 rounded-lg inline-block">Soal {currentQ + 1}</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              {isPK && (
+                <button 
+                  onClick={() => setCalcOpen(!calcOpen)}
+                  className="font-bold px-3 py-2 rounded-xl text-sm transition-colors border bg-slate-900 text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10"
+                >
+                  <i className="fas fa-calculator"></i>
+                </button>
+              )}
+              <button 
+                onClick={handleReportError}
+                title="Laporkan Soal"
+                className="font-bold px-3 py-2 rounded-xl text-sm transition-colors border bg-slate-900 text-rose-400 border-rose-500/30 hover:bg-rose-500/10"
+              >
+                <i className="fas fa-flag"></i>
+              </button>
+              <button 
+                onClick={toggleDoubtful}
+                className={`font-bold px-4 py-2 rounded-xl text-sm transition-colors border ${doubtful[currentQ] ? 'bg-amber-500 text-white border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-slate-900 text-amber-500 border-amber-500/30 hover:bg-amber-500/10'}`}
+              >
+                Ragu-ragu
+              </button>
+            </div>
+          </div>
+          
+          <div className="text-lg leading-relaxed mb-8 font-medium">
+            {question.question}
+          </div>
+
+          <div className="flex flex-col gap-3 flex-grow">
+            {question.options.map((opt, idx) => (
+              <button 
+                key={idx}
+                onClick={() => handleAnswer(idx)}
+                className={`text-left p-4 rounded-xl border-2 transition-all font-semibold ${answers[currentQ] === idx ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500 hover:bg-slate-800'}`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-700">
+            <button 
+              onClick={() => setCurrentQ(Math.max(0, currentQ - 1))}
+              disabled={currentQ === 0}
+              className="px-6 py-3 bg-slate-700 text-white font-bold rounded-xl disabled:opacity-50"
+            >
+              <i className="fas fa-arrow-left mr-2"></i> Sebelumnya
+            </button>
+            {currentQ === examQuestions.length - 1 ? (
+              <button 
+                onClick={() => handleSubmit(false)}
+                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20"
+              >
+                Selesai & Kumpulkan <i className="fas fa-check ml-2"></i>
+              </button>
+            ) : (
+              <button 
+                onClick={() => setCurrentQ(Math.min(examQuestions.length - 1, currentQ + 1))}
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20"
+              >
+                Selanjutnya <i className="fas fa-arrow-right ml-2"></i>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="w-full lg:w-80 bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl shrink-0 h-fit">
+          <h3 className="font-extrabold mb-4 text-center border-b border-slate-700 pb-4">Navigasi Soal</h3>
+          <div className="grid grid-cols-5 gap-3">
+            {examQuestions.map((q, idx) => {
+              let boxStyle = "bg-slate-900 border-slate-700 text-slate-400";
+              if (answers[idx] !== undefined) boxStyle = "bg-emerald-500/20 border-emerald-500 text-emerald-400";
+              if (doubtful[idx]) boxStyle = "bg-amber-500 border-amber-400 text-white shadow-[0_0_10px_rgba(245,158,11,0.5)]";
+              if (currentQ === idx) boxStyle += " ring-2 ring-white ring-offset-2 ring-offset-slate-800";
+              
+              return (
+                <button 
+                  key={idx}
+                  onClick={() => setCurrentQ(idx)}
+                  className={`w-10 h-10 rounded-lg border flex items-center justify-center font-bold text-sm transition-all ${boxStyle}`}
+                >
+                  {idx + 1}
+                </button>
+              );
+            })}
+          </div>
+          
+          <div className="mt-6 pt-4 border-t border-slate-700 flex flex-col gap-2 text-xs font-semibold text-slate-400">
+            <div className="flex items-center gap-2"><div className="w-4 h-4 bg-emerald-500/20 border border-emerald-500 rounded"></div> Sudah Dijawab</div>
+            <div className="flex items-center gap-2"><div className="w-4 h-4 bg-amber-500 border border-amber-400 rounded"></div> Ragu-ragu</div>
+            <div className="flex items-center gap-2"><div className="w-4 h-4 bg-slate-900 border border-slate-700 rounded"></div> Belum Dijawab</div>
+          </div>
+        </div>
+        
+        {isWebcamActive && (
+          <div className="absolute top-4 right-4 z-50 pointer-events-none">
+            <div className="relative w-32 h-24 rounded-lg overflow-hidden border-2 border-slate-700 shadow-2xl">
+              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
+              <div className="absolute bottom-1 right-1 bg-black/60 px-2 py-0.5 rounded text-[0.6rem] font-bold flex items-center gap-1">
+                <i className={`fas fa-circle text-[0.4rem] ${emotionState === 'Fokus' ? 'text-emerald-500' : 'text-rose-500 animate-pulse'}`}></i>
+                {emotionState}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
