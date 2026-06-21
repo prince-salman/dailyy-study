@@ -15,7 +15,8 @@ export default function Navbar() {
     }
   }, []);
 
-  if (pathname?.startsWith("/admin") || pathname?.startsWith("/tryout/exam")) return null;
+  const mainTabs = ["/", "/live", "/laporan", "/profile"];
+  if (!mainTabs.includes(pathname || "")) return null;
 
   const toggleTheme = () => {
     if (isDark) {
@@ -33,7 +34,6 @@ export default function Navbar() {
     if (pathname?.startsWith("/admin")) return null;
     if (pathname === "/live") return "Live Class";
     if (pathname === "/laporan") return "Laporan Belajar";
-    if (pathname === "/drill") return "Drill Soal";
     if (pathname === "/profile") return "Profil Saya";
     return null; // For home we show the greeting
   };

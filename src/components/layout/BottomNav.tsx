@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 export default function BottomNav() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/admin") || pathname?.startsWith("/tryout/exam")) return null;
+  const mainTabs = ["/", "/live", "/laporan", "/profile"];
+  if (!mainTabs.includes(pathname || "")) return null;
 
   const navItems = [
     { name: "Home", icon: "fa-home", path: "/" },
