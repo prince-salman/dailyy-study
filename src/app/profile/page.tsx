@@ -49,29 +49,28 @@ function ProfileContent() {
       { id: "18", name: "Muhamad Salman", email: "salman@dailystudy.id", password: "salman123", roles: ["admin", "teacher"], subjects: ["Matematika"] },
       { id: "19", name: "Farhan Lubis", email: "farhan@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Biologi"] },
       { id: "20", name: "Hanif Muhammad Ridhwan", email: "hanif@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Sejarah"] },
+      { id: "98", name: "Admin Utama", email: "admin@dailystudy.id", password: "Jual1909", roles: ["admin"], subjects: [] },
       { id: "99", name: "Siswa Demo", email: "demo@dailystudy.id", password: "demo123", roles: ["student"], subjects: [] }
     ];
 
     let users = JSON.parse(localStorage.getItem("app_users") || "[]");
     
-    let changed = false;
+    const validEmails = initUsers.map(u => u.email);
+    const filteredUsers = users.filter((u: any) => validEmails.includes(u.email));
+    
     initUsers.forEach(iu => {
-      const exists = users.findIndex((u: any) => u.email === iu.email);
-      if (exists === -1) {
-        users.push(iu);
-        changed = true;
+      const exists = filteredUsers.find((u: any) => u.email === iu.email);
+      if (!exists) {
+        filteredUsers.push(iu);
       } else {
-        if (users[exists].role && !users[exists].roles) {
-          users[exists].roles = iu.roles;
-          users[exists].subjects = iu.subjects;
-          changed = true;
+        if (!exists.roles) {
+          exists.roles = iu.roles;
+          exists.subjects = iu.subjects;
         }
       }
     });
 
-    if (changed || users.length === 0) {
-      localStorage.setItem("app_users", JSON.stringify(users.length === 0 ? initUsers : users));
-    }
+    localStorage.setItem("app_users", JSON.stringify(filteredUsers));
 
     if (localStorage.getItem("isLoggedIn") === "true") {
       setLoggedIn(true);
