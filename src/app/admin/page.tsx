@@ -252,9 +252,9 @@ export default function AdminDashboard() {
                 <div className="text-[0.65rem] text-slate-500 mt-0.5">Password saat ini: <span className="text-slate-300 bg-slate-900 px-1 rounded">{user.password}</span></div>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-2 sm:mt-0 w-full sm:w-auto">
                 {editingUserId === user.id ? (
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="flex items-center gap-2 w-full">
                     <input 
                       type="text" 
                       value={newPassword}

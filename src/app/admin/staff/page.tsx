@@ -116,7 +116,7 @@ export default function AdminStaff() {
           </div>
         ) : (
           users.map((s: any, idx: number) => (
-            <div key={s.email || idx} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-slate-600 transition-colors">
+            <div key={s.email || idx} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 group hover:border-slate-600 transition-colors">
               <div className="flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${s.role === 'admin' ? 'bg-[#fbbf24]' : s.role === 'bendahara' ? 'bg-emerald-500' : s.role === 'sekretaris' ? 'bg-blue-500' : 'bg-slate-600'}`}>
                   <i className={`fas ${s.role === 'admin' ? 'fa-user-shield' : s.role === 'bendahara' ? 'fa-wallet' : s.role === 'sekretaris' ? 'fa-user-tie' : 'fa-user'}`}></i>
@@ -126,8 +126,8 @@ export default function AdminStaff() {
                   <p className="text-xs text-indigo-300 font-bold uppercase mt-0.5">{s.role}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => handleResetPassword(s.id)} className="text-amber-400 bg-amber-400/10 hover:bg-amber-400/20 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors">
+              <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 justify-end">
+                <button onClick={() => handleResetPassword(s.id)} className="flex-1 sm:flex-none text-center text-amber-400 bg-amber-400/10 hover:bg-amber-400/20 font-bold text-xs px-3 py-2 rounded-lg transition-colors">
                   <i className="fas fa-key mr-1"></i> Reset Sandi
                 </button>
                 <button onClick={() => handleDelete(s.id)} className="text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-3 py-1.5 rounded-lg transition-colors">

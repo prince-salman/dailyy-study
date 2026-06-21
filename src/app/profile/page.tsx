@@ -310,7 +310,7 @@ function ProfileContent() {
           {availableRoles.length > 1 && (
             <div className="bg-bg-body p-4 rounded-xl border border-border mb-4 text-left">
               <label className="font-extrabold text-text-main text-xs block mb-2">Ganti Mode (Switch Role)</label>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {availableRoles.map(r => (
                   <button 
                     key={r}
