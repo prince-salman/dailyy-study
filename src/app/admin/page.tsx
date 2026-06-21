@@ -8,12 +8,18 @@ export default function AdminDashboard() {
   const [newExpenseName, setNewExpenseName] = useState("");
   const [newExpensePrice, setNewExpensePrice] = useState("");
 
+  const [users, setUsers] = useState<any[]>([]);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+
   useEffect(() => {
     try {
       const tx = JSON.parse(localStorage.getItem("transactions") || "[]");
       setTransactions(tx);
       const ex = JSON.parse(localStorage.getItem("expenses") || "[]");
       setExpenses(ex);
+      const appUsers = JSON.parse(localStorage.getItem("app_users") || "[]");
+      setUsers(appUsers);
     } catch (e) {}
   }, []);
 
@@ -64,6 +70,21 @@ export default function AdminDashboard() {
   const handlePrint = () => {
     addAuditLog("Mencetak Laporan Keuangan (PDF)");
     window.print();
+  };
+
+  const handleAdminChangePassword = (userId: string) => {
+    if (!newPassword || newPassword.length < 6) return;
+    const updatedUsers = users.map(u => 
+      u.id === userId ? { ...u, password: newPassword } : u
+    );
+    setUsers(updatedUsers);
+    localStorage.setItem("app_users", JSON.stringify(updatedUsers));
+    
+    const user = updatedUsers.find(u => u.id === userId);
+    if (user) addAuditLog(`Mengubah password akun: ${user.email}`);
+    
+    setEditingUserId(null);
+    setNewPassword("");
   };
 
   return (
@@ -210,6 +231,62 @@ export default function AdminDashboard() {
             <div className="text-[0.65rem] font-bold text-slate-500">Bulan Ini (1 Sesi)</div>
           </div>
         </div>
+      </div>
+
+      <h2 className="text-lg font-bold mb-4 mt-8 text-white print:hidden">Manajemen Pengguna (Ganti Password)</h2>
+      <div className="flex flex-col gap-3 print:hidden">
+        {users.length === 0 ? (
+          <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 border-dashed text-center text-slate-400 font-bold text-sm">
+            Belum ada pengguna terdaftar.
+          </div>
+        ) : (
+          users.map((user, idx) => (
+            <div key={user.id || idx} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="font-bold text-white text-sm flex items-center gap-2">
+                  {user.name} 
+                  {user.roles && user.roles.includes("admin") && <span className="bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded text-[0.6rem]">ADMIN</span>}
+                  {user.roles && user.roles.includes("teacher") && <span className="bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded text-[0.6rem]">TUTOR</span>}
+                </div>
+                <div className="text-xs text-slate-400">{user.email}</div>
+                <div className="text-[0.65rem] text-slate-500 mt-0.5">Password saat ini: <span className="text-slate-300 bg-slate-900 px-1 rounded">{user.password}</span></div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {editingUserId === user.id ? (
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <input 
+                      type="text" 
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Password baru"
+                      className="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:border-indigo-500 outline-none w-full sm:w-32"
+                    />
+                    <button 
+                      onClick={() => handleAdminChangePassword(user.id)}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs py-2 px-3 rounded-lg transition-colors"
+                    >
+                      Simpan
+                    </button>
+                    <button 
+                      onClick={() => { setEditingUserId(null); setNewPassword(""); }}
+                      className="bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs py-2 px-3 rounded-lg transition-colors"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => { setEditingUserId(user.id); setNewPassword(""); }}
+                    className="w-full sm:w-auto bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <i className="fas fa-key"></i> Ubah Password
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
     </div>
