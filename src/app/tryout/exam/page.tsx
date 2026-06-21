@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Draggable from "react-draggable";
+import * as faceapi from '@vladmandic/face-api';
 
 const examQuestions = [
   {
@@ -69,26 +70,58 @@ export default function ExamPage() {
 
   useEffect(() => {
     let stream: MediaStream | null = null;
+    let trackInterval: NodeJS.Timeout;
+
+    const startTracking = async (video: HTMLVideoElement) => {
+      try {
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
+
+        trackInterval = setInterval(async () => {
+          if (!video || video.paused || video.ended) return;
+          const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true);
+          
+          if (detections) {
+            setEmotionState('Fokus');
+            const landmarks = detections.landmarks;
+            const leftCheek = landmarks.positions[0];
+            const rightCheek = landmarks.positions[16];
+            const noseTip = landmarks.positions[30];
+            
+            const leftDist = noseTip.x - leftCheek.x;
+            const rightDist = rightCheek.x - noseTip.x;
+            
+            // Rasio untuk mendeteksi noleh kanan/kiri
+            if (leftDist < rightDist * 0.4) {
+              setWarningMsg("Peringatan: Harap menatap ke layar! (Tengok Kanan terdeteksi)");
+              setTimeout(() => setWarningMsg(""), 3000);
+            } else if (rightDist < leftDist * 0.4) {
+              setWarningMsg("Peringatan: Harap menatap ke layar! (Tengok Kiri terdeteksi)");
+              setTimeout(() => setWarningMsg(""), 3000);
+            }
+          } else {
+            setEmotionState('Wajah Tidak Ditemukan');
+          }
+        }, 1000);
+      } catch (err) {
+        console.error("Gagal memuat model face-api", err);
+      }
+    };
+
     navigator.mediaDevices.getUserMedia({ video: true })
       .then(s => {
         stream = s;
-        if (videoRef.current) videoRef.current.srcObject = s;
+        if (videoRef.current) {
+          videoRef.current.srcObject = s;
+          videoRef.current.onplay = () => startTracking(videoRef.current!);
+        }
         setIsWebcamActive(true);
       })
       .catch(() => console.error("Kamera tidak diizinkan."));
 
-    const emotionInterval = setInterval(() => {
-      const states = ['Fokus', 'Fokus', 'Fokus', 'Mengantuk', 'Kebingungan'];
-      const nextState = states[Math.floor(Math.random() * states.length)];
-      setEmotionState(nextState);
-      if (nextState === 'Mengantuk') {
-        setSleepAlert(true);
-        setTimeout(() => setSleepAlert(false), 5000);
-      }
-    }, 20000);
-
     return () => {
-      clearInterval(emotionInterval);
+      if (trackInterval) clearInterval(trackInterval);
       if (stream) stream.getTracks().forEach(t => t.stop());
     };
   }, []);
