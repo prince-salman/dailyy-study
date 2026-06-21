@@ -9,6 +9,8 @@ function ProfileContent() {
   const [isLogin, setIsLogin] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState("student");
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+  const [userSubjects, setUserSubjects] = useState<string[]>([]);
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,42 +29,57 @@ function ProfileContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    const initUsers = [
+      { id: "1", name: "Nabilla Maulana Putri", email: "nabilla@dailystudy.id", password: "password123", roles: ["sekretaris"], subjects: [] },
+      { id: "2", name: "Muhammad Wildan Yusufy", email: "wildan@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Sosiologi"] },
+      { id: "3", name: "Ibrahim Khalelurrahman", email: "ibrahim@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Matematika", "Biologi"] },
+      { id: "4", name: "Listiyana Utami", email: "listiyana@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Biologi", "Matematika"] },
+      { id: "5", name: "Anindyta Priatna", email: "anindyta@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Bahasa Indonesia"] },
+      { id: "6", name: "I Gede Rama Adijaya", email: "rama@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Ekonomi", "Sosiologi"] },
+      { id: "7", name: "Mufliha Khalida", email: "mufliha@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Bahasa Inggris"] },
+      { id: "8", name: "Muhammad Raja Nirwana", email: "raja@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Fisika"] },
+      { id: "10", name: "Asya Putri Hermawan", email: "asya@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Matematika"] },
+      { id: "11", name: "Elsa Lovitasari", email: "elsa@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["PPKN", "Matematika"] },
+      { id: "12", name: "Nayla Harisky Puteri", email: "nayla@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Matematika"] },
+      { id: "13", name: "Syifa Anjani", email: "syifa@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Fisika"] },
+      { id: "14", name: "Faiz Ramadhan", email: "faiz@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Matematika"] },
+      { id: "15", name: "Rangga Alditiyo Retadani", email: "rangga@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Geografi"] },
+      { id: "16", name: "Muhammad Syam Alfathin", email: "syam@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Kimia"] },
+      { id: "17", name: "Jessica Mauren Sinaga", email: "jessica@dailystudy.id", password: "password123", roles: ["teacher", "bendahara"], subjects: ["Geografi"] },
+      { id: "18", name: "Muhamad Salman", email: "salman@dailystudy.id", password: "salman123", roles: ["admin", "teacher"], subjects: ["Matematika"] },
+      { id: "19", name: "Farhan Lubis", email: "farhan@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Biologi"] },
+      { id: "20", name: "Hanif Muhammad Ridhwan", email: "hanif@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Sejarah"] },
+      { id: "99", name: "Siswa Demo", email: "demo@dailystudy.id", password: "demo123", roles: ["student"], subjects: [] }
+    ];
+
     let users = JSON.parse(localStorage.getItem("app_users") || "[]");
-    if (users.length === 0) {
-      users = [
-        { id: "1", name: "Admin Utama", email: "admin@dailystudy.id", password: "Jual1909", role: "admin" },
-        { id: "2", name: "Salman", email: "salman@dailystudy.id", password: "salman123", role: "bendahara" },
-        { id: "4", name: "Billa", email: "billa@dailystudy.id", password: "billa123", role: "sekretaris" },
-        { id: "5", name: "Tutor Live", email: "tutor@dailystudy.id", password: "tutor123", role: "teacher" },
-        { id: "6", name: "Siswa Demo", email: "demo@dailystudy.id", password: "demo123", role: "student" }
-      ];
-      localStorage.setItem("app_users", JSON.stringify(users));
-    } else {
-      let changed = false;
-      users = users.map((u: any) => {
-        if (u.email === "salman@dailystudy.id" && u.role !== "bendahara") { changed = true; return { ...u, role: "bendahara" }; }
-        return u;
-      });
-      if (users.find((u: any) => u.email === "pani@dailystudy.id")) {
-        users = users.filter((u: any) => u.email !== "pani@dailystudy.id");
+    
+    // Merge new initial users
+    let changed = false;
+    initUsers.forEach(iu => {
+      const exists = users.findIndex((u: any) => u.email === iu.email);
+      if (exists === -1) {
+        users.push(iu);
         changed = true;
+      } else {
+        // Update roles and subjects for existing team members
+        if (users[exists].role && !users[exists].roles) {
+          users[exists].roles = iu.roles;
+          users[exists].subjects = iu.subjects;
+          changed = true;
+        }
       }
-      if (!users.find((u: any) => u.email === "billa@dailystudy.id")) {
-        users.push({ id: Date.now().toString(), name: "Billa", email: "billa@dailystudy.id", password: "billa123", role: "sekretaris" });
-        changed = true;
-      }
-      if (!users.find((u: any) => u.email === "tutor@dailystudy.id")) {
-        users.push({ id: Date.now().toString(), name: "Tutor Live", email: "tutor@dailystudy.id", password: "tutor123", role: "teacher" });
-        changed = true;
-      }
-      if (changed) {
-        localStorage.setItem("app_users", JSON.stringify(users));
-      }
+    });
+
+    if (changed || users.length === 0) {
+      localStorage.setItem("app_users", JSON.stringify(users.length === 0 ? initUsers : users));
     }
 
     if (localStorage.getItem("isLoggedIn") === "true") {
       setLoggedIn(true);
       setUserRole(localStorage.getItem("userRole") || "student");
+      setAvailableRoles(JSON.parse(localStorage.getItem("availableRoles") || "[]"));
+      setUserSubjects(JSON.parse(localStorage.getItem("userSubjects") || "[]"));
       
       const email = localStorage.getItem("userEmail") || "";
       const tx = JSON.parse(localStorage.getItem("transactions") || "[]");
@@ -110,17 +127,25 @@ function ProfileContent() {
         users[userIndex] = user;
         localStorage.setItem("app_users", JSON.stringify(users));
 
+        const primaryRole = user.roles ? user.roles[0] : (user.role || "student");
+        const allRoles = user.roles || [primaryRole];
+        const subjects = user.subjects || [];
+
         localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("userRole", user.role);
+        localStorage.setItem("userRole", primaryRole);
+        localStorage.setItem("availableRoles", JSON.stringify(allRoles));
+        localStorage.setItem("userSubjects", JSON.stringify(subjects));
         localStorage.setItem("userName", user.name);
         localStorage.setItem("userEmail", user.email);
         localStorage.setItem("current_session_id", sessionId);
         
         setLoggedIn(true);
-        setUserRole(user.role);
+        setUserRole(primaryRole);
+        setAvailableRoles(allRoles);
+        setUserSubjects(subjects);
         
-        if (user.role !== "student") {
-          router.push(user.role === "teacher" ? "/tutor" : "/admin");
+        if (primaryRole !== "student") {
+          router.push(primaryRole === "teacher" ? "/tutor" : "/admin");
           return;
         }
 
@@ -280,9 +305,31 @@ function ProfileContent() {
           {(userRole === "admin" || userRole === "bendahara" || userRole === "sekretaris" || userRole === "teacher") && (
             <Link href={userRole === "teacher" ? "/tutor" : "/admin"}>
               <Button className="w-full mb-3 bg-slate-800 text-white border-slate-800 hover:bg-slate-700">
-                <i className={`fas ${userRole === "bendahara" ? "fa-file-invoice-dollar" : userRole === "sekretaris" ? "fa-clipboard-list" : userRole === "teacher" ? "fa-video" : "fa-cogs"} mr-2`}></i> Masuk Panel {userRole === "bendahara" ? "Bendahara" : userRole === "sekretaris" ? "Sekretaris" : userRole === "teacher" ? "Tutor Live" : "Admin"}
+                <i className={`fas ${userRole === "bendahara" ? "fa-file-invoice-dollar" : userRole === "sekretaris" ? "fa-clipboard-list" : userRole === "teacher" ? "fa-video" : "fa-cogs"} mr-2`}></i> Masuk Panel {userRole === "bendahara" ? "Bendahara" : userRole === "sekretaris" ? "Sekretaris" : userRole === "teacher" ? "Tutor" : "Admin"}
               </Button>
             </Link>
+          )}
+
+          {availableRoles.length > 1 && (
+            <div className="bg-bg-body p-4 rounded-xl border border-border mb-4 text-left">
+              <label className="font-extrabold text-text-main text-xs block mb-2">Ganti Mode (Switch Role)</label>
+              <div className="flex gap-2">
+                {availableRoles.map(r => (
+                  <button 
+                    key={r}
+                    onClick={() => {
+                      localStorage.setItem("userRole", r);
+                      setUserRole(r);
+                      router.push(r === "teacher" ? "/tutor" : r === "student" ? "/" : "/admin");
+                    }}
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all border ${userRole === r ? 'bg-primary text-white border-primary' : 'bg-bg-card text-text-sec border-border hover:border-primary'}`}
+                  >
+                    <i className={`fas ${r === "admin" ? "fa-user-shield" : r === "bendahara" ? "fa-wallet" : r === "sekretaris" ? "fa-user-tie" : r === "teacher" ? "fa-chalkboard-teacher" : "fa-user"} mr-1`}></i>
+                    {r.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
           {isChangingPassword ? (

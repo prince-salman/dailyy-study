@@ -5,12 +5,18 @@ export default function DrillQuestions() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [userSubjects, setUserSubjects] = useState<string[]>([]);
 
   const [qText, setQText] = useState("");
+  const [subject, setSubject] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
   const [correctIdx, setCorrectIdx] = useState(0);
 
   useEffect(() => {
+    const subjects = JSON.parse(localStorage.getItem("userSubjects") || "[]");
+    setUserSubjects(subjects);
+    if (subjects.length > 0) setSubject(subjects[0]);
+
     const saved = JSON.parse(localStorage.getItem("tutor_drill_questions") || "[]");
     if (saved.length > 0) {
       setQuestions(saved);
@@ -25,7 +31,7 @@ export default function DrillQuestions() {
 
   const handleSave = () => {
     if (!qText.trim()) return;
-    const newQ = { id: Date.now(), q: qText, options, ans: correctIdx };
+    const newQ = { id: Date.now(), q: qText, subject: subject || "Umum", options, ans: correctIdx };
     const updated = [...questions, newQ];
     setQuestions(updated);
     localStorage.setItem("tutor_drill_questions", JSON.stringify(updated));
@@ -77,6 +83,21 @@ export default function DrillQuestions() {
         <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl mb-8 animate-in slide-in-from-top-4">
           <h2 className="text-lg font-bold text-white mb-4">Tambah Soal Drill</h2>
           <div className="space-y-4">
+            {userSubjects.length > 0 && (
+              <div>
+                <label className="block text-sm font-bold text-slate-400 mb-2">Mata Pelajaran</label>
+                <select 
+                  value={subject}
+                  onChange={e => setSubject(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-emerald-500 outline-none transition-colors"
+                >
+                  {userSubjects.map(sub => (
+                    <option key={sub} value={sub}>{sub}</option>
+                  ))}
+                  <option value="Umum">Umum / Lainnya</option>
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-bold text-slate-400 mb-2">Pertanyaan</label>
               <textarea 
@@ -133,7 +154,10 @@ export default function DrillQuestions() {
           questions.map((q, i) => (
             <div key={q.id} className="bg-slate-900 p-5 rounded-2xl border border-slate-800 group hover:border-slate-700 transition-colors">
               <div className="flex justify-between items-start mb-3">
-                <h3 className="font-bold text-white text-lg"><span className="text-emerald-400 mr-2">{i + 1}.</span>{q.q}</h3>
+                <div className="flex flex-col">
+                  {q.subject && <span className="text-xs font-bold text-emerald-400 mb-1">{q.subject}</span>}
+                  <h3 className="font-bold text-white text-lg"><span className="text-slate-500 mr-2">{i + 1}.</span>{q.q}</h3>
+                </div>
                 <button onClick={() => handleDelete(q.id)} className="text-slate-500 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100">
                   <i className="fas fa-trash-alt"></i>
                 </button>
