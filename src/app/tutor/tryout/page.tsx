@@ -74,7 +74,7 @@ export default function TryoutQuestions() {
           </button>
           <button onClick={handleGenerateAI} disabled={isGenerating} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(79,70,229,0.4)] flex items-center">
             {isGenerating ? <i className="fas fa-circle-notch fa-spin mr-2"></i> : <i className="fas fa-magic mr-2"></i>}
-            {isGenerating ? "Menganalisis Konteks..." : "Generate by AI ✨"}
+            {isGenerating ? "Menganalisis Konteks..." : "Generate by AI"}
           </button>
         </div>
       </div>

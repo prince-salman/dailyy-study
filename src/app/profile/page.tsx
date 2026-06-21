@@ -54,7 +54,6 @@ function ProfileContent() {
 
     let users = JSON.parse(localStorage.getItem("app_users") || "[]");
     
-    // Merge new initial users
     let changed = false;
     initUsers.forEach(iu => {
       const exists = users.findIndex((u: any) => u.email === iu.email);
@@ -62,7 +61,6 @@ function ProfileContent() {
         users.push(iu);
         changed = true;
       } else {
-        // Update roles and subjects for existing team members
         if (users[exists].role && !users[exists].roles) {
           users[exists].roles = iu.roles;
           users[exists].subjects = iu.subjects;

@@ -74,7 +74,7 @@ export default function DrillQuestions() {
           </button>
           <button onClick={handleGenerateAI} disabled={isGenerating} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center">
             {isGenerating ? <i className="fas fa-circle-notch fa-spin mr-2"></i> : <i className="fas fa-magic mr-2"></i>}
-            {isGenerating ? "Menyusun Drill..." : "Generate by AI ✨"}
+            {isGenerating ? "Menyusun Drill..." : "Generate by AI"}
           </button>
         </div>
       </div>

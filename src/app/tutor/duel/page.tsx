@@ -75,7 +75,7 @@ export default function DuelQuestions() {
           </button>
           <button onClick={handleGenerateAI} disabled={isGenerating} className="bg-gradient-to-r from-rose-600 to-orange-500 hover:from-rose-500 hover:to-orange-400 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(225,29,72,0.4)] flex items-center">
             {isGenerating ? <i className="fas fa-circle-notch fa-spin mr-2"></i> : <i className="fas fa-magic mr-2"></i>}
-            {isGenerating ? "Mencari Trivia..." : "Generate by AI ✨"}
+            {isGenerating ? "Mencari Trivia..." : "Generate by AI"}
           </button>
         </div>
       </div>
