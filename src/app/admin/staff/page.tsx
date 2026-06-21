@@ -115,8 +115,8 @@ export default function AdminStaff() {
             <p className="text-sm font-bold text-slate-400">Belum ada data akun</p>
           </div>
         ) : (
-          users.map((s: any) => (
-            <div key={s.id} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center shadow-md">
+          users.map((s: any, idx: number) => (
+            <div key={s.email || idx} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-slate-600 transition-colors">
               <div className="flex items-center gap-4">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${s.role === 'admin' ? 'bg-[#fbbf24]' : s.role === 'bendahara' ? 'bg-emerald-500' : s.role === 'sekretaris' ? 'bg-blue-500' : 'bg-slate-600'}`}>
                   <i className={`fas ${s.role === 'admin' ? 'fa-user-shield' : s.role === 'bendahara' ? 'fa-wallet' : s.role === 'sekretaris' ? 'fa-user-tie' : 'fa-user'}`}></i>
