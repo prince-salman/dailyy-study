@@ -241,7 +241,7 @@ export default function AdminDashboard() {
           </div>
         ) : (
           users.map((user, idx) => (
-            <div key={user.id || idx} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div key={user.email || idx} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="font-bold text-white text-sm flex items-center gap-2">
                   {user.name} 
