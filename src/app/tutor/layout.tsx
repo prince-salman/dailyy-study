@@ -1,10 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 
 export default function TutorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -32,6 +33,28 @@ export default function TutorLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
       </nav>
+      
+      <div className="bg-slate-900 border-b border-slate-800 px-4 overflow-x-auto">
+        <div className="flex gap-6 max-w-7xl mx-auto">
+          {[
+            { name: "Live Class", path: "/tutor" },
+            { name: "Soal Tryout", path: "/tutor/tryout" },
+            { name: "Soal Drill", path: "/tutor/drill" },
+            { name: "Soal Duel", path: "/tutor/duel" }
+          ].map(tab => {
+            const isActive = pathname === tab.path;
+            return (
+              <Link 
+                key={tab.path} 
+                href={tab.path}
+                className={`whitespace-nowrap py-4 px-2 border-b-2 font-bold text-sm transition-colors ${isActive ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+              >
+                {tab.name}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
       
       <main className="p-6 max-w-7xl mx-auto pb-24">
         {children}
