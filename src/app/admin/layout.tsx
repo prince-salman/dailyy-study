@@ -37,30 +37,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {children}
       </main>
       
-      <div className="fixed bottom-0 left-0 right-0 h-16 bg-slate-900 border-t border-slate-800 flex justify-around items-center px-2 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+      <div className="fixed bottom-0 left-0 right-0 h-16 bg-slate-900 border-t border-slate-800 flex overflow-x-auto no-scrollbar items-center justify-start sm:justify-around px-2 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
         {(role === "admin" || role === "bendahara" || role === "sekretaris") && (
-          <Link href="/admin" className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${pathname === '/admin' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
+          <Link href="/admin" className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[75px] h-full transition-colors ${pathname === '/admin' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
             <i className={`fas fa-chart-pie text-lg mb-1 ${pathname === '/admin' ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} transition-all`}></i>
             <span className="text-[0.6rem] font-bold">Dashboard</span>
           </Link>
         )}
 
         {(role === "admin" || role === "sekretaris") && (
-          <Link href="/admin/staff" className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${pathname === '/admin/staff' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
+          <Link href="/admin/staff" className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[75px] h-full transition-colors ${pathname === '/admin/staff' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
             <i className={`fas fa-users text-lg mb-1 ${pathname === '/admin/staff' ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} transition-all`}></i>
             <span className="text-[0.6rem] font-bold">Manajemen Akun</span>
           </Link>
         )}
 
         {(role === "admin" || role === "sekretaris") && (
-          <Link href="/admin/helpdesk" className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${pathname === '/admin/helpdesk' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
+          <Link href="/admin/helpdesk" className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[75px] h-full transition-colors ${pathname === '/admin/helpdesk' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
             <i className={`fas fa-headset text-lg mb-1 ${pathname === '/admin/helpdesk' ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} transition-all`}></i>
             <span className="text-[0.6rem] font-bold">Helpdesk</span>
           </Link>
         )}
 
         {role === "admin" && (
-          <Link href="/admin/duel" className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${pathname === '/admin/duel' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
+          <Link href="/admin/duel" className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[75px] h-full transition-colors ${pathname === '/admin/duel' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
             <i className={`fas fa-bolt text-lg mb-1 ${pathname === '/admin/duel' ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} transition-all`}></i>
             <span className="text-[0.6rem] font-bold">Soal 1 vs 1</span>
           </Link>
@@ -68,11 +68,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {role === "admin" && (
           <>
-            <Link href="/admin/logs" className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${pathname === '/admin/logs' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
+            <Link href="/admin/logs" className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[75px] h-full transition-colors ${pathname === '/admin/logs' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
               <i className={`fas fa-history text-lg mb-1 ${pathname === '/admin/logs' ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} transition-all`}></i>
               <span className="text-[0.6rem] font-bold">Audit Logs</span>
             </Link>
-            <Link href="/admin/settings" className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${pathname === '/admin/settings' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
+            <Link href="/admin/settings" className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[75px] h-full transition-colors ${pathname === '/admin/settings' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
               <i className={`fas fa-cog text-lg mb-1 ${pathname === '/admin/settings' ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} transition-all`}></i>
               <span className="text-[0.6rem] font-bold">Settings</span>
             </Link>

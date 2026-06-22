@@ -16,14 +16,14 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="shrink-0 h-[80px] bg-bg-glass backdrop-blur-xl border-t border-border flex justify-around items-center z-50 pb-4 md:pb-0 md:h-[65px] md:justify-center md:gap-20">
+    <div className="shrink-0 h-[80px] bg-bg-glass backdrop-blur-xl border-t border-border flex overflow-x-auto no-scrollbar justify-start sm:justify-center items-center z-50 pb-4 md:pb-0 md:h-[65px] md:gap-20 px-2 space-x-2 sm:space-x-8">
       {navItems.map((item) => {
         const isActive = pathname === item.path;
         return (
           <Link
             key={item.name}
             href={item.path}
-            className={`flex flex-col items-center gap-1.5 cursor-pointer flex-1 md:flex-none md:min-w-[80px] relative pt-2.5 transition-all duration-300 ${
+            className={`flex-shrink-0 flex flex-col items-center gap-1.5 cursor-pointer min-w-[75px] md:min-w-[80px] relative pt-2.5 transition-all duration-300 ${
               isActive ? "text-primary" : "text-text-sec"
             }`}
           >
