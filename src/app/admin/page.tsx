@@ -99,7 +99,7 @@ export default function AdminDashboard() {
 
   const expiryAlerts = approvedTx.filter(t => {
     const start = new Date(t.approvedAt || t.date);
-    const expiry = new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days active
+    const expiry = new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000);
     const diffDays = Math.ceil((expiry.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
     return diffDays >= 0 && diffDays <= 3;
   });

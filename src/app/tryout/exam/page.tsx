@@ -11,7 +11,7 @@ const examQuestions = [
     question: "Jika semua burung bisa terbang, dan unta adalah burung, maka kesimpulan yang benar adalah...",
     options: ["A. Unta tidak bisa terbang", "B. Unta bisa terbang", "C. Unta bukan burung", "D. Tidak ada kesimpulan"],
     correct: 1,
-    weight: 0.8 // Bobot IRT simulasi (Mudah)
+    weight: 0.8
   },
   {
     id: 2,
@@ -19,7 +19,7 @@ const examQuestions = [
     question: "Sinonim dari kata 'Ekskavasi' adalah...",
     options: ["A. Penggalian", "B. Penimbunan", "C. Penjelajahan", "D. Pelestarian"],
     correct: 0,
-    weight: 1.2 // Bobot IRT simulasi (Sedang)
+    weight: 1.2
   },
   {
     id: 3,
@@ -27,7 +27,7 @@ const examQuestions = [
     question: "Manakah kalimat berikut yang merupakan kalimat pasif?",
     options: ["A. Budi menendang bola.", "B. Bola ditendang oleh Budi.", "C. Budi sedang bermain bola.", "D. Budi membeli bola baru."],
     correct: 1,
-    weight: 1.0 // Sedang
+    weight: 1.0
   },
   {
     id: 4,
@@ -35,7 +35,7 @@ const examQuestions = [
     question: "Nilai x yang memenuhi persamaan 2x + 5 = 15 adalah...",
     options: ["A. 5", "B. 10", "C. 15", "D. 20"],
     correct: 0,
-    weight: 1.5 // Sulit
+    weight: 1.5
   },
   {
     id: 5,
@@ -43,7 +43,7 @@ const examQuestions = [
     question: "Sebuah kereta melaju dengan kecepatan 80 km/jam. Jarak yang ditempuh dalam 2,5 jam adalah...",
     options: ["A. 150 km", "B. 180 km", "C. 200 km", "D. 250 km"],
     correct: 2,
-    weight: 1.3 // Sulit
+    weight: 1.3
   }
 ];
 
@@ -96,7 +96,7 @@ export default function ExamPage() {
             const leftDist = noseTip.x - leftCheek.x;
             const rightDist = rightCheek.x - noseTip.x;
             
-            // Rasio untuk mendeteksi noleh kanan/kiri
+            
             if (leftDist < rightDist * 0.4) {
               setWarningMsg("Peringatan: Harap menatap ke layar! (Tengok Kanan terdeteksi)");
               setTimeout(() => setWarningMsg(""), 3000);
@@ -141,7 +141,7 @@ export default function ExamPage() {
       } catch (e) {}
     }
 
-    // Shuffle questions and options
+    
     const shuffleArray = (array: any[]) => {
       const arr = [...array];
       for (let i = arr.length - 1; i > 0; i--) {
@@ -155,7 +155,7 @@ export default function ExamPage() {
       const optionsWithIndex = q.options.map((opt: string, idx: number) => ({ text: opt, isCorrect: idx === q.correct }));
       const shuffledOptions = shuffleArray(optionsWithIndex);
       const newCorrectIndex = shuffledOptions.findIndex((o: any) => o.isCorrect);
-      // Remove original A, B, C, D prefixes if any
+      
       const cleanedOptions = shuffledOptions.map((o: any, i: number) => {
         let text = o.text.replace(/^[A-E]\.\s*/, '');
         return `${String.fromCharCode(65 + i)}. ${text}`;
@@ -205,7 +205,7 @@ export default function ExamPage() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          handleSubmit(true); // Auto submit
+          handleSubmit(true);
           return 0;
         }
         if (prev % 5 === 0) {

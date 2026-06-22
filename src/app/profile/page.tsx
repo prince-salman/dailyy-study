@@ -49,8 +49,7 @@ function ProfileContent() {
       { id: "18", name: "Muhamad Salman", email: "salman@dailystudy.id", password: "salman123", roles: ["teacher", "admin"], subjects: ["Matematika Wajib"] },
       { id: "19", name: "Farhan Lubis", email: "farhan@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Biologi"] },
       { id: "20", name: "Hanif Muhammad Ridhwan", email: "hanif@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Sejarah"] },
-      { id: "98", name: "Admin Utama", email: "admin@dailystudy.id", password: "Jual1909", roles: ["admin"], subjects: [] },
-      { id: "99", name: "Siswa Demo", email: "demo@dailystudy.id", password: "demo123", roles: ["student"], subjects: [] }
+      { id: "98", name: "Admin Utama", email: "admin@dailystudy.id", password: "Jual1909", roles: ["admin"], subjects: [] }
     ];
 
     let users = JSON.parse(localStorage.getItem("app_users") || "[]");
@@ -63,7 +62,6 @@ function ProfileContent() {
       if (!exists) {
         filteredUsers.push(iu);
       } else {
-        // Force sync roles and subjects to reflect any updates in the code
         exists.roles = iu.roles;
         exists.subjects = iu.subjects;
       }

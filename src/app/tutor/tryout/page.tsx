@@ -54,7 +54,7 @@ export default function TryoutQuestions() {
       for (let i = 1; i < lines.length; i++) {
         const parts = lines[i].split(',');
         if (parts.length >= 6) {
-          // Format CSV: Soal, OpsiA, OpsiB, OpsiC, OpsiD, JawabanBenar(0-3), MataPelajaran, VideoURL
+          
           newQs.push({
             id: Date.now() + i,
             q: parts[0],

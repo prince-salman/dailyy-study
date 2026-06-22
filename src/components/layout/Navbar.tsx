@@ -63,7 +63,7 @@ export default function Navbar() {
         <>
           <div className="flex justify-between items-center mb-4">
             <div className="text-xl font-extrabold text-text-main">
-              <h1>Halo, Student! 👋</h1>
+              <h1>Halo, Student!</h1>
             </div>
             <div className="flex items-center gap-3">
               <button
