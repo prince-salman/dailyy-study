@@ -251,6 +251,30 @@ function ProfileContent() {
             Halo, {userRole === "admin" ? "Admin" : userRole === "bendahara" ? "Bendahara" : userRole === "sekretaris" || userRole === "teacher" ? localStorage.getItem("userName") : "Siswa"}!
           </h2>
           <p className="text-sm font-semibold text-text-sec">Akun kamu sudah aktif.</p>
+
+          {/* Badges Overview for Tutors / Admins */}
+          {userRole !== "student" && (
+             <div className="flex justify-center gap-2 mt-4 flex-wrap">
+               {availableRoles.includes("teacher") && (
+                 <div className="flex flex-col items-center justify-center p-2 rounded-xl border w-[72px] h-[72px] text-center text-indigo-400 bg-indigo-500/10 border-indigo-500/20 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                   <i className="fas fa-chalkboard-teacher text-xl mb-1"></i>
+                   <span className="text-[0.55rem] font-bold leading-tight">Tutor Teladan</span>
+                 </div>
+               )}
+               {availableRoles.includes("admin") && (
+                 <div className="flex flex-col items-center justify-center p-2 rounded-xl border w-[72px] h-[72px] text-center text-amber-400 bg-amber-500/10 border-amber-500/20 shadow-[0_0_10px_rgba(251,191,36,0.2)]">
+                   <i className="fas fa-user-shield text-xl mb-1"></i>
+                   <span className="text-[0.55rem] font-bold leading-tight">Admin Elite</span>
+                 </div>
+               )}
+               {(availableRoles.includes("sekretaris") || availableRoles.includes("bendahara")) && (
+                 <div className="flex flex-col items-center justify-center p-2 rounded-xl border w-[72px] h-[72px] text-center text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                   <i className="fas fa-gem text-xl mb-1"></i>
+                   <span className="text-[0.55rem] font-bold leading-tight">Staff Inti</span>
+                 </div>
+               )}
+             </div>
+          )}
         </div>
 
         {userRole === "student" && (
@@ -269,6 +293,44 @@ function ProfileContent() {
               <div className="bg-slate-900 rounded-xl p-3 border border-slate-700 flex flex-col items-center justify-center text-center">
                 <i className="fas fa-star text-2xl text-amber-400 mb-1 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]"></i>
                 <p className="text-white font-bold text-lg leading-tight">{xpData.xp} <span className="text-[0.6rem] font-normal text-slate-400 block">Total XP</span></p>
+              </div>
+            </div>
+
+            <div className="relative z-10 mb-5">
+              <h4 className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-2">
+                <i className="fas fa-award text-indigo-400"></i> Lencana Kehormatan (Badges)
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col items-center justify-center p-2 rounded-xl border w-[72px] h-[72px] text-center text-emerald-400 bg-emerald-400/10 border-emerald-400/20 shadow-[0_0_10px_rgba(52,211,153,0.1)]">
+                  <i className="fas fa-seedling text-xl mb-1"></i>
+                  <span className="text-[0.55rem] font-bold leading-tight">Pemula Tangguh</span>
+                </div>
+                {xpData.streak >= 3 ? (
+                  <div className="flex flex-col items-center justify-center p-2 rounded-xl border w-[72px] h-[72px] text-center text-rose-500 bg-rose-500/10 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.2)] animate-in zoom-in">
+                    <i className="fas fa-fire-alt text-xl mb-1"></i>
+                    <span className="text-[0.55rem] font-bold leading-tight">Konsisten 3 Hari</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-2 rounded-xl border w-[72px] h-[72px] text-center text-slate-500 bg-slate-800/50 border-slate-700 opacity-50 grayscale">
+                    <i className="fas fa-lock text-xl mb-1"></i>
+                    <span className="text-[0.55rem] font-bold leading-tight">Konsisten 3 Hari</span>
+                  </div>
+                )}
+                {xpData.level >= 5 ? (
+                  <div className="flex flex-col items-center justify-center p-2 rounded-xl border w-[72px] h-[72px] text-center text-amber-400 bg-amber-400/10 border-amber-400/20 shadow-[0_0_10px_rgba(251,191,36,0.2)] animate-in zoom-in">
+                    <i className="fas fa-crown text-xl mb-1"></i>
+                    <span className="text-[0.55rem] font-bold leading-tight">Siswa Elite</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-2 rounded-xl border w-[72px] h-[72px] text-center text-slate-500 bg-slate-800/50 border-slate-700 opacity-50 grayscale">
+                    <i className="fas fa-lock text-xl mb-1"></i>
+                    <span className="text-[0.55rem] font-bold leading-tight">Siswa Elite</span>
+                  </div>
+                )}
+                <div className="flex flex-col items-center justify-center p-2 rounded-xl border w-[72px] h-[72px] text-center text-slate-500 bg-slate-800/50 border-slate-700 opacity-50 grayscale">
+                  <i className="fas fa-lock text-xl mb-1"></i>
+                  <span className="text-[0.55rem] font-bold leading-tight">Tryout Master</span>
+                </div>
               </div>
             </div>
 
