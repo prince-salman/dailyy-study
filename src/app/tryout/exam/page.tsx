@@ -463,7 +463,7 @@ export default function ExamPage() {
           </div>
 
           <div className="flex flex-col gap-3 flex-grow">
-            {question.options.map((opt, idx) => (
+            {question.options.map((opt: string, idx: number) => (
               <button 
                 key={idx}
                 onClick={() => handleAnswer(idx)}
