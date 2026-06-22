@@ -141,7 +141,7 @@ export default function Home() {
 
   return (
     <div className="pb-8 pt-6 relative">
-      {/* Onboarding Tour Modal */}
+
       {showTour && (
         <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-800 rounded-3xl p-8 max-w-sm w-full border border-slate-700 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">

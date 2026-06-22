@@ -5,7 +5,7 @@ export default function DynamicHead() {
   useEffect(() => {
     const customLogo = localStorage.getItem("adminLogo");
     if (customLogo) {
-      // 1. Update Favicon (Browser Tab Icon)
+      
       let iconLink = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
       if (!iconLink) {
         iconLink = document.createElement("link");
@@ -14,7 +14,7 @@ export default function DynamicHead() {
       }
       iconLink.href = customLogo;
 
-      // 2. Update Apple Touch Icon (iOS Homescreen)
+      
       let appleIcon = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
       if (!appleIcon) {
         appleIcon = document.createElement("link");
@@ -23,7 +23,7 @@ export default function DynamicHead() {
       }
       appleIcon.href = customLogo;
 
-      // 3. Update PWA Manifest (Android APK/Homescreen)
+      
       const manifest = {
         name: "Daily Study",
         short_name: "Daily Study",

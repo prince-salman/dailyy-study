@@ -10,7 +10,7 @@ export default function PWAInstallPrompt() {
 
     const handler = (e: any) => {
       e.preventDefault();
-      // Simpan event secara global agar bisa diakses oleh tombol manapun
+      
       (window as any).deferredPrompt = e;
     };
 
@@ -18,6 +18,6 @@ export default function PWAInstallPrompt() {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  // Komponen ini sekarang sepenuhnya tersembunyi (Headless)
+  
   return null;
 }

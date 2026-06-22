@@ -250,7 +250,7 @@ function ProfileContent() {
           </h2>
           <p className="text-sm font-semibold text-text-sec">Akun kamu sudah aktif.</p>
 
-          {/* Badges Overview for Tutors / Admins */}
+
           {userRole !== "student" && (
              <div className="flex justify-center gap-2 mt-4 flex-wrap">
                {availableRoles.includes("teacher") && (

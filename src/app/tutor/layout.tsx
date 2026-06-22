@@ -11,7 +11,7 @@ export default function TutorLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     setMounted(true);
     const r = localStorage.getItem("userRole") || "";
-    // Allow teacher, admin, and sekretaris
+    
     if (r !== "teacher" && r !== "admin" && r !== "sekretaris") {
       router.push("/");
     }

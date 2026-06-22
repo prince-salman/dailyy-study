@@ -35,7 +35,7 @@ export default function Navbar() {
     if (pathname === "/live") return "Live Class";
     if (pathname === "/laporan") return "Laporan Belajar";
     if (pathname === "/profile") return "Profil Saya";
-    return null; // For home we show the greeting
+    return null;
   };
 
   const title = getPageTitle();

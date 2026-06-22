@@ -353,7 +353,7 @@ export default function ExamPage() {
       onPaste={(e) => e.preventDefault()}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* Watermark Overlay */}
+
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden flex flex-wrap justify-center items-center opacity-[0.03]">
         {Array.from({ length: 50 }).map((_, i) => (
           <span key={i} className="text-2xl font-bold p-8 -rotate-45 whitespace-nowrap">

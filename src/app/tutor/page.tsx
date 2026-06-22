@@ -251,7 +251,7 @@ export default function AdminLiveClass() {
             </div>
           </div>
 
-          {/* Live Chat Monitor */}
+
           <div className="bg-slate-800 rounded-2xl border border-slate-700 flex flex-col h-[400px]">
             <div className="p-4 border-b border-slate-700 bg-slate-800/80 rounded-t-2xl">
               <h3 className="font-bold text-white"><i className="fas fa-comments text-blue-400 mr-2"></i> Live Chat Monitor</h3>
@@ -318,7 +318,7 @@ export default function AdminLiveClass() {
         </div>
       )}
 
-      {/* Modul Polling Kuis */}
+
       {isLive && (
         <div className="mt-6 bg-slate-800 rounded-2xl border border-slate-700 p-6">
           <div className="flex justify-between items-center mb-4">

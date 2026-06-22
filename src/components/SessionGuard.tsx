@@ -17,7 +17,7 @@ export default function SessionGuard() {
           const me = users.find((u: any) => u.email === userEmail);
           
           if (me && me.sessionId && me.sessionId !== currentSession) {
-            // Seseorang masuk dari device lain
+            
             localStorage.removeItem("isLoggedIn");
             localStorage.removeItem("userRole");
             localStorage.removeItem("userName");
@@ -28,7 +28,7 @@ export default function SessionGuard() {
           }
         }
       }
-    }, 2000); // Cek setiap 2 detik
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [router]);
