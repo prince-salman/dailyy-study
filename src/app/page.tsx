@@ -29,8 +29,6 @@ export default function Home() {
         router.push("/admin");
       } else if (userRole === "teacher") {
         router.push("/tutor");
-      } else if (userRole === "parent") {
-        router.push("/parent");
       }
       return;
     }
@@ -267,14 +265,14 @@ export default function Home() {
       </div>
 
             <div className="px-6 grid grid-cols-2 gap-3 mb-8">
-        <a href="/drill" onClick={(e) => handleSubjectClick(e, "/drill")} className="block">
+        <a href="/tryout" onClick={(e) => handleSubjectClick(e, "/tryout")} className="block">
           <Card className="h-full group hover:border-primary-soft flex flex-col justify-between">
-            <div className="w-9 h-9 mb-4 text-emerald-500 bg-emerald-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-              <i className="fas fa-dumbbell"></i>
+            <div className="w-9 h-9 mb-4 text-indigo-500 bg-indigo-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i className="fas fa-pencil-alt"></i>
             </div>
             <div>
-              <h3 className="font-extrabold text-text-main mb-1 tracking-tight">Drill Soal</h3>
-              <p className="text-[0.7rem] font-semibold text-text-sec">Latihan tanpa batas.</p>
+              <h3 className="font-extrabold text-text-main mb-1 tracking-tight">Try Out</h3>
+              <p className="text-[0.7rem] font-semibold text-text-sec">Evaluasi kemampuanmu.</p>
             </div>
           </Card>
         </a>
@@ -287,30 +285,6 @@ export default function Home() {
             <div>
               <h3 className="font-extrabold text-text-main mb-1 tracking-tight">Live Class</h3>
               <p className="text-[0.7rem] font-semibold text-text-sec">Sesi tatap muka online.</p>
-            </div>
-          </Card>
-        </a>
-
-        <a href="/duel" onClick={(e) => handleSubjectClick(e, "/duel")} className="block">
-          <Card className="h-full group hover:border-primary-soft flex flex-col justify-between">
-            <div className="w-9 h-9 mb-4 text-amber-500 bg-amber-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-              <i className="fas fa-swords"></i>
-            </div>
-            <div>
-              <h3 className="font-extrabold text-text-main mb-1 tracking-tight">Mode Duel</h3>
-              <p className="text-[0.7rem] font-semibold text-text-sec">PvP Kuis 1 vs 1.</p>
-            </div>
-          </Card>
-        </a>
-
-        <a href="/study-room" onClick={(e) => handleSubjectClick(e, "/study-room")} className="block">
-          <Card className="h-full group hover:border-primary-soft flex flex-col justify-between">
-            <div className="w-9 h-9 mb-4 text-indigo-500 bg-indigo-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-              <i className="fas fa-stopwatch"></i>
-            </div>
-            <div>
-              <h3 className="font-extrabold text-text-main mb-1 tracking-tight">Study Room</h3>
-              <p className="text-[0.7rem] font-semibold text-text-sec">Fokus Pomodoro bareng.</p>
             </div>
           </Card>
         </a>
@@ -357,7 +331,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {snbtSubjects.map((sub, idx) => (
-              <a key={idx} href={`/video?subject=${sub.id}`} onClick={(e) => handleSubjectClick(e, `/video?subject=${sub.id}`)} className="block">
+              <a key={idx} href="#" onClick={(e) => { e.preventDefault(); alert("Modul video sedang direkam oleh Tutor. Silakan cek kembali nanti."); }} className="block">
                 <Card className="h-full group hover:border-primary-soft p-3.5 flex flex-col items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-bg-body border border-border flex items-center justify-center text-text-sec group-hover:text-primary group-hover:bg-primary-soft transition-colors">
                     <i className={`fas ${sub.icon} text-[0.8rem]`}></i>
@@ -383,9 +357,9 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {tkaWajib.map((sub, idx) => {
                 const isUnlocked = hasWajib;
-                const href = isUnlocked ? `/video?subject=wajib-${sub.label}` : "/pricing?type=wajib";
+                const href = isUnlocked ? "#" : "/pricing?type=wajib";
                 return (
-                  <a key={idx} href={href} onClick={(e) => handleSubjectClick(e, href)} className="block">
+                  <a key={idx} href={href} onClick={(e) => { if (isUnlocked) { e.preventDefault(); alert("Modul video sedang direkam oleh Tutor. Silakan cek kembali nanti."); } else { handleSubjectClick(e, href); } }} className="block">
                     <Card className={`h-full group p-3.5 flex flex-col items-start gap-3 relative overflow-hidden transition-all ${isUnlocked ? 'hover:border-primary-soft bg-primary/5' : 'hover:border-[#fbbf24]/50'}`}>
                       {!isUnlocked && (
                         <div className="absolute top-2 right-2 text-[#fbbf24]/30 group-hover:text-[#fbbf24] transition-colors">
@@ -417,9 +391,9 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {tkaPeminatan.map((sub, idx) => {
                 const isUnlocked = approvedSubjects.includes(sub.label);
-                const href = isUnlocked ? `/video?subject=peminatan-${sub.label}` : `/pricing?type=peminatan&subject=${encodeURIComponent(sub.label)}`;
+                const href = isUnlocked ? "#" : `/pricing?type=peminatan&subject=${encodeURIComponent(sub.label)}`;
                 return (
-                  <a key={idx} href={href} onClick={(e) => handleSubjectClick(e, href)} className="block">
+                  <a key={idx} href={href} onClick={(e) => { if (isUnlocked) { e.preventDefault(); alert("Modul video sedang direkam oleh Tutor. Silakan cek kembali nanti."); } else { handleSubjectClick(e, href); } }} className="block">
                     <Card className={`h-full group p-3.5 flex flex-col items-start gap-3 relative overflow-hidden transition-all ${isUnlocked ? 'hover:border-primary-soft bg-primary/5' : 'hover:border-[#fbbf24]/50'}`}>
                       {!isUnlocked && (
                         <div className="absolute top-2 right-2 text-[#fbbf24]/30 group-hover:text-[#fbbf24] transition-colors">
