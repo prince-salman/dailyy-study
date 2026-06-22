@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function DuelQuestions() {
+  const router = useRouter();
   const [questions, setQuestions] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -13,6 +15,12 @@ export default function DuelQuestions() {
   const [correctIdx, setCorrectIdx] = useState(0);
 
   useEffect(() => {
+    const role = localStorage.getItem("userRole");
+    if (role !== "admin") {
+      router.push("/admin");
+      return;
+    }
+
     const subjects = JSON.parse(localStorage.getItem("userSubjects") || "[]");
     setUserSubjects(subjects);
     if (subjects.length > 0) setSubject(subjects[0]);
