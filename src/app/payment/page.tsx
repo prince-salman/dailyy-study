@@ -66,7 +66,7 @@ function PaymentContent() {
 
   return (
     <div className="pb-8 pt-6 px-6 animate-in fade-in duration-300 min-h-[80vh] flex flex-col justify-center">
-      <Link href="/pricing" className="inline-flex items-center gap-2 text-text-sec hover:text-primary transition-colors mb-6 font-bold text-sm">
+      <Link href="/" className="inline-flex items-center gap-2 text-text-sec hover:text-primary transition-colors mb-6 font-bold text-sm">
         <i className="fas fa-arrow-left"></i>
         <span>Kembali ke Harga</span>
       </Link>

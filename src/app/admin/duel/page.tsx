@@ -6,13 +6,13 @@ export default function DuelQuestions() {
   const router = useRouter();
   const [questions, setQuestions] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [userSubjects, setUserSubjects] = useState<string[]>([]);
+
 
   const [qText, setQText] = useState("");
   const [subject, setSubject] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
   const [correctIdx, setCorrectIdx] = useState(0);
+  const [userSubjects, setUserSubjects] = useState<string[]>([]);
 
   useEffect(() => {
     const role = localStorage.getItem("userRole");
@@ -53,19 +53,7 @@ export default function DuelQuestions() {
     localStorage.setItem("tutor_duel_questions", JSON.stringify(updated));
   };
 
-  const handleGenerateAI = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      const aiQs = [
-        { id: Date.now() + 1, q: "Siapakah pencipta lukisan Mona Lisa?", options: ["Vincent van Gogh", "Leonardo da Vinci", "Pablo Picasso", "Michelangelo"], ans: 1 },
-        { id: Date.now() + 2, q: "Benua terbesar di dunia adalah...", options: ["Afrika", "Amerika Utara", "Eropa", "Asia"], ans: 3 }
-      ];
-      const updated = [...questions, ...aiQs];
-      setQuestions(updated);
-      localStorage.setItem("tutor_duel_questions", JSON.stringify(updated));
-      setIsGenerating(false);
-    }, 2000);
-  };
+
 
   return (
     <div className="animate-in fade-in duration-300">
@@ -76,11 +64,7 @@ export default function DuelQuestions() {
         </div>
         <div className="flex gap-3">
           <button onClick={() => setShowForm(!showForm)} className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors border border-slate-700 shadow-sm">
-            <i className={`fas ${showForm ? 'fa-times' : 'fa-plus'} mr-2`}></i>{showForm ? 'Batal' : 'Tambah Manual'}
-          </button>
-          <button onClick={handleGenerateAI} disabled={isGenerating} className="bg-gradient-to-r from-rose-600 to-orange-500 hover:from-rose-500 hover:to-orange-400 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(225,29,72,0.4)] flex items-center">
-            {isGenerating ? <i className="fas fa-circle-notch fa-spin mr-2"></i> : <i className="fas fa-magic mr-2"></i>}
-            {isGenerating ? "Mencari Trivia..." : "Generate by AI"}
+            <i className={`fas ${showForm ? 'fa-times' : 'fa-plus'} mr-2`}></i>{showForm ? 'Batal' : 'Tambah Soal'}
           </button>
         </div>
       </div>

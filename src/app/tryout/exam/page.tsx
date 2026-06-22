@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Draggable from "react-draggable";
-import * as faceapi from '@vladmandic/face-api';
+
 
 const examQuestions: any[] = [];
 
@@ -37,13 +37,14 @@ export default function ExamPage() {
 
     const startTracking = async (video: HTMLVideoElement) => {
       try {
+        const faceapi = await import('@vladmandic/face-api');
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
 
         trackInterval = setInterval(async () => {
           if (!video || video.paused || video.ended) return;
-          const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true);
+          const detections = await (faceapi as any).detectSingleFace(video, new (faceapi as any).TinyFaceDetectorOptions()).withFaceLandmarks(true);
           
           if (detections) {
             setEmotionState('Fokus');

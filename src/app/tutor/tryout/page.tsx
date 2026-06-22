@@ -22,11 +22,8 @@ export default function TryoutQuestions() {
     if (saved.length > 0) {
       setQuestions(saved);
     } else {
-      const init = [
-        { id: 1, q: "Jika semua X adalah Y, dan sebagian Y adalah Z, maka...", options: ["Semua X adalah Z", "Sebagian X adalah Z", "Tidak ada X yang Z", "Tidak dapat disimpulkan"], ans: 3 }
-      ];
-      setQuestions(init);
-      localStorage.setItem("tutor_tryout_questions", JSON.stringify(init));
+      setQuestions([]);
+      localStorage.setItem("tutor_tryout_questions", JSON.stringify([]));
     }
   }, []);
 

@@ -12,6 +12,7 @@ function ProfileContent() {
   const [availableRoles, setAvailableRoles] = useState<string[]>([]);
   const [userSubjects, setUserSubjects] = useState<string[]>([]);
   
+  const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -74,6 +75,7 @@ function ProfileContent() {
       setUserRole(localStorage.getItem("userRole") || "student");
       setAvailableRoles(JSON.parse(localStorage.getItem("availableRoles") || "[]"));
       setUserSubjects(JSON.parse(localStorage.getItem("userSubjects") || "[]"));
+      setUserName(localStorage.getItem("userName") || "");
       
       const email = localStorage.getItem("userEmail") || "";
       const tx = JSON.parse(localStorage.getItem("transactions") || "[]");
@@ -246,7 +248,7 @@ function ProfileContent() {
              )}
           </div>
           <h2 className="text-2xl font-extrabold text-text-main mb-2 tracking-tight">
-            Halo, {userRole === "admin" ? "Admin" : userRole === "bendahara" ? "Bendahara" : userRole === "sekretaris" || userRole === "teacher" ? localStorage.getItem("userName") : "Siswa"}!
+            Halo, {userRole === "admin" ? "Admin" : userRole === "bendahara" ? "Bendahara" : userRole === "sekretaris" || userRole === "teacher" ? userName : "Siswa"}!
           </h2>
           <p className="text-sm font-semibold text-text-sec">Akun kamu sudah aktif.</p>
 
