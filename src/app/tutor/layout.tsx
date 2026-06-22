@@ -39,8 +39,7 @@ export default function TutorLayout({ children }: { children: React.ReactNode })
           {[
             { name: "Live Class", path: "/tutor" },
             { name: "Soal Tryout", path: "/tutor/tryout" },
-            { name: "Soal Drill", path: "/tutor/drill" },
-            { name: "Soal Duel", path: "/tutor/duel" }
+            { name: "Soal Drill", path: "/tutor/drill" }
           ].map(tab => {
             const isActive = pathname === tab.path;
             return (

@@ -4,48 +4,7 @@ import { useRouter } from "next/navigation";
 import Draggable from "react-draggable";
 import * as faceapi from '@vladmandic/face-api';
 
-const examQuestions = [
-  {
-    id: 1,
-    subtest: "Penalaran Umum (PU)",
-    question: "Jika semua burung bisa terbang, dan unta adalah burung, maka kesimpulan yang benar adalah...",
-    options: ["A. Unta tidak bisa terbang", "B. Unta bisa terbang", "C. Unta bukan burung", "D. Tidak ada kesimpulan"],
-    correct: 1,
-    weight: 0.8
-  },
-  {
-    id: 2,
-    subtest: "Penalaran Umum (PU)",
-    question: "Sinonim dari kata 'Ekskavasi' adalah...",
-    options: ["A. Penggalian", "B. Penimbunan", "C. Penjelajahan", "D. Pelestarian"],
-    correct: 0,
-    weight: 1.2
-  },
-  {
-    id: 3,
-    subtest: "Penalaran Umum (PU)",
-    question: "Manakah kalimat berikut yang merupakan kalimat pasif?",
-    options: ["A. Budi menendang bola.", "B. Bola ditendang oleh Budi.", "C. Budi sedang bermain bola.", "D. Budi membeli bola baru."],
-    correct: 1,
-    weight: 1.0
-  },
-  {
-    id: 4,
-    subtest: "Pengetahuan Kuantitatif (PK)",
-    question: "Nilai x yang memenuhi persamaan 2x + 5 = 15 adalah...",
-    options: ["A. 5", "B. 10", "C. 15", "D. 20"],
-    correct: 0,
-    weight: 1.5
-  },
-  {
-    id: 5,
-    subtest: "Pengetahuan Kuantitatif (PK)",
-    question: "Sebuah kereta melaju dengan kecepatan 80 km/jam. Jarak yang ditempuh dalam 2,5 jam adalah...",
-    options: ["A. 150 km", "B. 180 km", "C. 200 km", "D. 250 km"],
-    correct: 2,
-    weight: 1.3
-  }
-];
+const examQuestions: any[] = [];
 
 export default function ExamPage() {
   const router = useRouter();
@@ -362,6 +321,20 @@ export default function ExamPage() {
           </p>
           <button onClick={resumeExam} className="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-4 rounded-xl transition-colors shadow-lg shadow-rose-500/30 text-lg uppercase tracking-wider">
             Kembali ke Ujian
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (shuffledQuestions.length === 0) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center text-white">
+        <div className="bg-slate-800 p-8 rounded-3xl border border-slate-700 max-w-md w-full shadow-2xl">
+          <h2 className="text-2xl font-bold mb-4">Belum ada soal ujian tersedia</h2>
+          <p className="text-slate-400 mb-6">Silakan tunggu tutor untuk menambahkan soal tryout.</p>
+          <button onClick={() => router.push("/tryout")} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-colors">
+            Kembali
           </button>
         </div>
       </div>

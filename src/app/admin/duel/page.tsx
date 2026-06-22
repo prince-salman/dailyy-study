@@ -21,10 +21,7 @@ export default function DuelQuestions() {
     if (saved.length > 0) {
       setQuestions(saved);
     } else {
-      const init = [
-        { id: 1, q: "Berapa hasil dari 5 + 7 * 2?", options: ["24", "19", "17", "14"], ans: 1 },
-        { id: 2, q: "Apa sinonim dari kata 'Evokatif'?", options: ["Menggugah", "Mengekang", "Membosankan", "Melupakan"], ans: 0 }
-      ];
+      const init: any[] = [];
       setQuestions(init);
       localStorage.setItem("tutor_duel_questions", JSON.stringify(init));
     }

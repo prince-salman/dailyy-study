@@ -6,10 +6,7 @@ import FaceRecognitionModal from "@/components/ui/FaceRecognitionModal";
 export default function TryOutList() {
   const [showFaceScan, setShowFaceScan] = useState(false);
   const [targetExam, setTargetExam] = useState("");
-  const tryouts = [
-    { id: "to-1", title: "Try Out Nasional SNBT #1", questions: 30, duration: 45, status: "available" },
-    { id: "to-2", title: "Try Out Nasional SNBT #2", questions: 40, duration: 60, status: "locked" }
-  ];
+  const tryouts: any[] = [];
 
   return (
     <div className="min-h-screen bg-bg-app px-6 pt-6 pb-24 animate-in fade-in">
@@ -25,38 +22,45 @@ export default function TryOutList() {
       </div>
 
       <div className="flex flex-col gap-4">
-        {tryouts.map((to) => (
-          <div key={to.id} className="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl relative overflow-hidden">
-            <div className="flex justify-between items-start mb-4 relative z-10">
-              <div>
-                <h3 className="font-extrabold text-lg text-white">{to.title}</h3>
-                <p className="text-xs font-semibold text-slate-400 mt-1">
-                  <i className="fas fa-file-alt mr-1"></i> {to.questions} Soal &bull; <i className="fas fa-stopwatch ml-1 mr-1"></i> {to.duration} Menit
-                </p>
-              </div>
-              {to.status === "locked" ? (
-                <span className="bg-slate-700 text-slate-400 px-3 py-1 rounded-full text-xs font-bold"><i className="fas fa-lock mr-1"></i>Terkunci</span>
-              ) : (
-                <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold"><i className="fas fa-unlock mr-1"></i>Terbuka</span>
-              )}
-            </div>
-            
-            <div className="relative z-10">
-              {to.status === "available" ? (
-                <button 
-                  onClick={() => { setTargetExam(`/tryout/exam?id=${to.id}`); setShowFaceScan(true); }}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-colors shadow-lg"
-                >
-                  <i className="fas fa-play mr-2"></i> Mulai Ujian Sekarang
-                </button>
-              ) : (
-                <button disabled className="w-full bg-slate-700 text-slate-500 font-bold py-3 rounded-xl cursor-not-allowed">
-                  Premium Only
-                </button>
-              )}
-            </div>
+        {tryouts.length === 0 ? (
+          <div className="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl text-center">
+            <h3 className="font-extrabold text-xl text-white mb-2">Belum Ada Paket Ujian</h3>
+            <p className="text-sm font-semibold text-slate-400">Silakan tunggu tutor untuk menambahkan paket ujian baru.</p>
           </div>
-        ))}
+        ) : (
+          tryouts.map((to) => (
+            <div key={to.id} className="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl relative overflow-hidden">
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div>
+                  <h3 className="font-extrabold text-lg text-white">{to.title}</h3>
+                  <p className="text-xs font-semibold text-slate-400 mt-1">
+                    <i className="fas fa-file-alt mr-1"></i> {to.questions} Soal &bull; <i className="fas fa-stopwatch ml-1 mr-1"></i> {to.duration} Menit
+                  </p>
+                </div>
+                {to.status === "locked" ? (
+                  <span className="bg-slate-700 text-slate-400 px-3 py-1 rounded-full text-xs font-bold"><i className="fas fa-lock mr-1"></i>Terkunci</span>
+                ) : (
+                  <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold"><i className="fas fa-unlock mr-1"></i>Terbuka</span>
+                )}
+              </div>
+              
+              <div className="relative z-10">
+                {to.status === "available" ? (
+                  <button 
+                    onClick={() => { setTargetExam(`/tryout/exam?id=${to.id}`); setShowFaceScan(true); }}
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-colors shadow-lg"
+                  >
+                    <i className="fas fa-play mr-2"></i> Mulai Ujian Sekarang
+                  </button>
+                ) : (
+                  <button disabled className="w-full bg-slate-700 text-slate-500 font-bold py-3 rounded-xl cursor-not-allowed">
+                    Premium Only
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       <FaceRecognitionModal 

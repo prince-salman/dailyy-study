@@ -59,6 +59,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
         )}
 
+        {(role === "admin" || role === "sekretaris") && (
+          <Link href="/admin/duel" className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${pathname === '/admin/duel' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
+            <i className={`fas fa-bolt text-lg mb-1 ${pathname === '/admin/duel' ? 'scale-110 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : ''} transition-all`}></i>
+            <span className="text-[0.6rem] font-bold">Soal 1 vs 1</span>
+          </Link>
+        )}
+
         {role === "admin" && (
           <>
             <Link href="/admin/logs" className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${pathname === '/admin/logs' ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-300'}`}>
