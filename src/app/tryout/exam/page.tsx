@@ -64,6 +64,10 @@ export default function ExamPage() {
   const [emotionState, setEmotionState] = useState('Fokus');
   const [isWebcamActive, setIsWebcamActive] = useState(false);
 
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [shuffledQuestions, setShuffledQuestions] = useState<any[]>([]);
+
   const [difficultyMsg, setDifficultyMsg] = useState("");
   const [warningMsg, setWarningMsg] = useState("");
   const [sleepAlert, setSleepAlert] = useState(false);
@@ -137,6 +141,29 @@ export default function ExamPage() {
       } catch (e) {}
     }
 
+    // Shuffle questions and options
+    const shuffleArray = (array: any[]) => {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
+    
+    const shuffled = shuffleArray(examQuestions).map((q: any) => {
+      const optionsWithIndex = q.options.map((opt: string, idx: number) => ({ text: opt, isCorrect: idx === q.correct }));
+      const shuffledOptions = shuffleArray(optionsWithIndex);
+      const newCorrectIndex = shuffledOptions.findIndex((o: any) => o.isCorrect);
+      // Remove original A, B, C, D prefixes if any
+      const cleanedOptions = shuffledOptions.map((o: any, i: number) => {
+        let text = o.text.replace(/^[A-E]\.\s*/, '');
+        return `${String.fromCharCode(65 + i)}. ${text}`;
+      });
+      return { ...q, options: cleanedOptions, correct: newCorrectIndex };
+    });
+    setShuffledQuestions(shuffled);
+
     const handleVisibilityChange = () => {
       if (document.hidden) {
         setCheatWarnings(prev => {
@@ -150,14 +177,30 @@ export default function ExamPage() {
         });
       }
     };
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && hasStarted) {
+        setIsPaused(true);
+        setCheatWarnings(prev => {
+          const newW = prev + 1;
+          setWarningMsg(`Peringatan Anti-Cheat (${newW}/3): Anda keluar dari mode Layar Penuh!`);
+          setTimeout(() => setWarningMsg(""), 5000);
+          if (newW >= 3) handleSubmit(true);
+          return newW;
+        });
+      }
+    };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
     };
-  }, []);
+  }, [hasStarted]);
 
   useEffect(() => {
+    if (!hasStarted || isPaused) return;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -172,12 +215,12 @@ export default function ExamPage() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [answers, doubtful]);
+  }, [answers, doubtful, hasStarted, isPaused]);
 
   const handleAnswer = (idx: number) => {
     setAnswers(prev => ({ ...prev, [currentQ]: idx }));
-    if (answers[currentQ] === undefined && currentQ < examQuestions.length - 1) {
-      const isCorrect = idx === examQuestions[currentQ].correct;
+    if (answers[currentQ] === undefined && currentQ < shuffledQuestions.length - 1) {
+      const isCorrect = idx === shuffledQuestions[currentQ].correct;
       setDifficultyMsg(isCorrect ? "Jawaban Benar! AI menaikkan tingkat kesulitan soal berikutnya..." : "Jawaban Salah. AI menyesuaikan soal agar lebih mudah dipahami...");
       setTimeout(() => setDifficultyMsg(""), 3000);
     }
@@ -194,7 +237,7 @@ export default function ExamPage() {
 
   const handleReportError = () => {
     const reports = JSON.parse(localStorage.getItem("error_reports") || "[]");
-    reports.push({ qId: examQuestions[currentQ]?.id, date: new Date().toISOString() });
+    reports.push({ qId: shuffledQuestions[currentQ]?.id, date: new Date().toISOString() });
     localStorage.setItem("error_reports", JSON.stringify(reports));
     setDifficultyMsg("Laporan terkirim ke Admin.");
     setTimeout(() => setDifficultyMsg(""), 3000);
@@ -208,7 +251,7 @@ export default function ExamPage() {
     let correctCount = 0;
     const breakdown: Record<string, { correct: number, total: number }> = {};
 
-    examQuestions.forEach((q, idx) => {
+    shuffledQuestions.forEach((q, idx) => {
       if (!breakdown[q.subtest]) breakdown[q.subtest] = { correct: 0, total: 0 };
       breakdown[q.subtest].total += 1;
 
@@ -226,9 +269,9 @@ export default function ExamPage() {
       date: new Date().toISOString(),
       score: finalScore,
       correct: correctCount,
-      total: examQuestions.length,
+      total: shuffledQuestions.length,
       answers,
-      questions: examQuestions,
+      questions: shuffledQuestions,
       breakdown
     };
     
@@ -254,8 +297,8 @@ export default function ExamPage() {
     }
   };
 
-  const question = examQuestions[currentQ];
-  const isPK = question.subtest.includes("Kuantitatif");
+  const question = shuffledQuestions[currentQ];
+  const isPK = question?.subtest?.includes("Kuantitatif");
 
   const toggleZenMode = () => {
     if (!document.fullscreenElement) {
@@ -269,8 +312,84 @@ export default function ExamPage() {
     }
   };
 
+  const startExam = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+    setZenMode(true);
+    setHasStarted(true);
+    setIsPaused(false);
+  };
+
+  const resumeExam = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+    setZenMode(true);
+    setIsPaused(false);
+  };
+
+  if (!hasStarted) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center text-white">
+        <div className="bg-slate-800 p-8 rounded-3xl border border-slate-700 max-w-md w-full shadow-2xl">
+          <div className="w-20 h-20 bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
+            <i className="fas fa-desktop"></i>
+          </div>
+          <h1 className="text-2xl font-extrabold mb-2">Persiapan Ujian</h1>
+          <p className="text-slate-400 text-sm font-semibold mb-8">
+            Ujian ini menggunakan sistem CBT terpadu dengan pelacakan aktivitas ketat. 
+            Pastikan kamera Anda aktif, Anda tidak bisa pindah tab, dan Anda wajib dalam mode Layar Penuh.
+          </p>
+          <button onClick={startExam} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-indigo-500/20 text-lg">
+            Mulai Ujian Sekarang
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isPaused) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-center text-white fixed inset-0 z-[200]">
+        <div className="bg-rose-500/10 p-8 rounded-3xl border border-rose-500/30 max-w-md w-full shadow-2xl backdrop-blur-md">
+          <div className="w-24 h-24 bg-rose-500/20 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl animate-pulse">
+            <i className="fas fa-exclamation-triangle"></i>
+          </div>
+          <h1 className="text-3xl font-black mb-2 text-rose-500">UJIAN TERJEDA</h1>
+          <p className="text-rose-300 text-sm font-bold mb-8">
+            Anda terdeteksi keluar dari layar penuh atau pindah tab! Tindakan ini dicatat oleh sistem Anti-Cheat. Jika Anda melakukan ini 3 kali, ujian akan dihentikan otomatis.
+          </p>
+          <button onClick={resumeExam} className="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-4 rounded-xl transition-colors shadow-lg shadow-rose-500/30 text-lg uppercase tracking-wider">
+            Kembali ke Ujian
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!question) return <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center font-bold">Memuat soal...</div>;
+
+  const userEmail = typeof window !== 'undefined' ? localStorage.getItem("userEmail") || "siswa@dailystudy.id" : "siswa@dailystudy.id";
+
   return (
-    <div className={`min-h-screen bg-slate-900 text-white flex flex-col font-sans selection:bg-indigo-500/30 ${zenMode ? 'fixed inset-0 z-[100]' : ''}`}>
+    <div 
+      className={`min-h-screen bg-slate-900 text-white flex flex-col font-sans select-none ${zenMode ? 'fixed inset-0 z-[100]' : ''}`}
+      onCopy={(e) => e.preventDefault()}
+      onCut={(e) => e.preventDefault()}
+      onPaste={(e) => e.preventDefault()}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {/* Watermark Overlay */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden flex flex-wrap justify-center items-center opacity-[0.03]">
+        {Array.from({ length: 50 }).map((_, i) => (
+          <span key={i} className="text-2xl font-bold p-8 -rotate-45 whitespace-nowrap">
+            {userEmail}
+          </span>
+        ))}
+      </div>
+      
+      <div className="relative z-10 flex flex-col min-h-screen">
       <header className="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center sticky top-0 z-50">
         <div className="font-extrabold flex items-center gap-2">
           <i className="fas fa-desktop text-indigo-400"></i> CBT SNBT
@@ -448,6 +567,7 @@ export default function ExamPage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
