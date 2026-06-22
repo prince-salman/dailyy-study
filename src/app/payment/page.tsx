@@ -44,14 +44,16 @@ function PaymentContent() {
 
     try {
       const txs = JSON.parse(localStorage.getItem("transactions") || "[]");
-      const user = localStorage.getItem("userName") || "Siswa Tamu";
+      const userEmail = localStorage.getItem("userEmail") || "";
+      const userName = localStorage.getItem("userName") || "Siswa Tamu";
       txs.push({
         id: Date.now().toString(),
         package: pkg,
         price,
         subject,
         status: "pending",
-        user,
+        user: userEmail || userName,
+        userName,
         date: new Date().toISOString()
       });
       localStorage.setItem("transactions", JSON.stringify(txs));

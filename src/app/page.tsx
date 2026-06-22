@@ -53,11 +53,14 @@ export default function Home() {
     }
     
     try {
+      const currentEmail = localStorage.getItem("userEmail") || "";
+      const currentName = localStorage.getItem("userName") || "";
       const tx = JSON.parse(localStorage.getItem("transactions") || "[]");
       const now = new Date().getTime();
       
       const activeApproved = tx.filter((t: any) => {
         if (t.status !== "approved" || !t.approvedAt) return false;
+        if (t.user !== currentEmail && t.user !== currentName) return false;
         
         let days = 30;
         if (t.package?.includes("2 Minggu")) days = 14;
