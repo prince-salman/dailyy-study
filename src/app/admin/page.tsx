@@ -318,7 +318,7 @@ export default function AdminDashboard() {
           </div>
         ) : (
           users.map((user, idx) => (
-            <React.Fragment key={user.id || idx}>
+            <React.Fragment key={`${user.id ?? ''}-${idx}`}>
               <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="font-bold text-white text-sm flex items-center gap-2">
