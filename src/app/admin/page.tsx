@@ -383,7 +383,6 @@ export default function AdminDashboard() {
                       Batal
                     </button>
                   </div>
-                  </div>
                 </div>
               )}
             </React.Fragment>
