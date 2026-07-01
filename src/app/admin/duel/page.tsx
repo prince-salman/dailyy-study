@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function DuelQuestions() {
   const router = useRouter();
@@ -25,32 +26,31 @@ export default function DuelQuestions() {
     setUserSubjects(subjects);
     if (subjects.length > 0) setSubject(subjects[0]);
 
-    const saved = JSON.parse(localStorage.getItem("tutor_duel_questions") || "[]");
-    if (saved.length > 0) {
-      setQuestions(saved);
-    } else {
-      const init: any[] = [];
-      setQuestions(init);
-      localStorage.setItem("tutor_duel_questions", JSON.stringify(init));
-    }
+    supabase
+      .from("duel_questions")
+      .select("*")
+      .order("id")
+      .then(({ data }) => {
+        if (data) setQuestions(data);
+      });
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!qText.trim()) return;
     const newQ = { id: Date.now(), q: qText, subject: subject || "Umum", options, ans: correctIdx };
-    const updated = [...questions, newQ];
-    setQuestions(updated);
-    localStorage.setItem("tutor_duel_questions", JSON.stringify(updated));
-    setShowForm(false);
-    setQText("");
-    setOptions(["", "", "", ""]);
-    setCorrectIdx(0);
+    const { error } = await supabase.from("duel_questions").insert(newQ);
+    if (!error) {
+      setQuestions(prev => [...prev, newQ]);
+      setShowForm(false);
+      setQText("");
+      setOptions(["", "", "", ""]);
+      setCorrectIdx(0);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    const updated = questions.filter(q => q.id !== id);
-    setQuestions(updated);
-    localStorage.setItem("tutor_duel_questions", JSON.stringify(updated));
+  const handleDelete = async (id: number) => {
+    await supabase.from("duel_questions").delete().eq("id", id);
+    setQuestions(prev => prev.filter(q => q.id !== id));
   };
 
 

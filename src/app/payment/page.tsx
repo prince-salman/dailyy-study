@@ -6,6 +6,7 @@ import Card from "@/components/ui/Card";
 import Link from "next/link";
 import { QRCodeCanvas } from "qrcode.react";
 import { generateDynamicQRIS } from "@/lib/qris";
+import { supabase } from "@/lib/supabase";
 
 function PaymentContent() {
   const searchParams = useSearchParams();
@@ -35,35 +36,27 @@ function PaymentContent() {
 
   const subject = searchParams.get("subject");
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!uploaded) {
       setUploadError("Harap unggah bukti transfer terlebih dahulu.");
       return;
     }
     setLoading(true);
 
-    try {
-      const txs = JSON.parse(localStorage.getItem("transactions") || "[]");
-      const userEmail = localStorage.getItem("userEmail") || "";
-      const userName = localStorage.getItem("userName") || "Siswa Tamu";
-      txs.push({
-        id: Date.now().toString(),
-        package: pkg,
-        price,
-        subject,
-        status: "pending",
-        user: userEmail || userName,
-        userName,
-        date: new Date().toISOString()
-      });
-      localStorage.setItem("transactions", JSON.stringify(txs));
-    } catch (e) {}
+    await supabase.from('transactions').insert({
+      id: Date.now().toString(),
+      package: pkg,
+      price: price,
+      subject: subject || '',
+      status: 'pending',
+      user_email: localStorage.getItem('userEmail') || '',
+      user_name: localStorage.getItem('userName') || '',
+      date: new Date().toISOString()
+    });
 
-    setTimeout(() => {
-      setLoading(false);
-      setConfirmed(true);
-      setTimeout(() => router.push("/"), 2500);
-    }, 1500);
+    setLoading(false);
+    setConfirmed(true);
+    setTimeout(() => router.push("/"), 2500);
   };
 
   return (

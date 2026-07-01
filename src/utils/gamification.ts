@@ -1,3 +1,5 @@
+import { supabase } from "@/lib/supabase";
+
 export const calculateLevel = (xp: number) => {
   if (xp < 500) return { level: 1, title: "Pemula", nextLvlXp: 500, progress: (xp / 500) * 100 };
   if (xp < 1500) return { level: 2, title: "Pelajar", nextLvlXp: 1500, progress: ((xp - 500) / 1000) * 100 };
@@ -6,68 +8,69 @@ export const calculateLevel = (xp: number) => {
   return { level: 5, title: "Grandmaster", nextLvlXp: xp, progress: 100 };
 };
 
-export const addXP = (amount: number, reason: string) => {
+export const addXP = async (amount: number, reason: string) => {
   if (typeof window === "undefined") return;
   const userEmail = localStorage.getItem("userEmail");
   if (!userEmail) return;
 
-  const users = JSON.parse(localStorage.getItem("app_users") || "[]");
-  const userIndex = users.findIndex((u: any) => u.email === userEmail);
-  
-  if (userIndex !== -1) {
-    const user = users[userIndex];
-    if (user.role !== "student") return;
-    
-    const currentXp = user.xp || 0;
-    user.xp = currentXp + amount;
-    
-    const xpHistory = user.xpHistory || [];
-    xpHistory.unshift({ amount, reason, date: new Date().toISOString() });
-    if (xpHistory.length > 50) xpHistory.pop();
-    user.xpHistory = xpHistory;
+  const { data: user } = await supabase
+    .from("users")
+    .select("xp, xp_history, roles")
+    .eq("email", userEmail)
+    .single();
 
-    users[userIndex] = user;
-    localStorage.setItem("app_users", JSON.stringify(users));
-  }
+  if (!user) return;
+  if (!user.roles?.includes("student")) return;
+
+  const newXp = (user.xp || 0) + amount;
+  const xpHistory = Array.isArray(user.xp_history) ? user.xp_history : [];
+  xpHistory.unshift({ amount, reason, date: new Date().toISOString() });
+  if (xpHistory.length > 50) xpHistory.pop();
+
+  await supabase
+    .from("users")
+    .update({ xp: newXp, xp_history: xpHistory })
+    .eq("email", userEmail);
 };
 
-export const processDailyStreak = (userEmail: string) => {
-  const users = JSON.parse(localStorage.getItem("app_users") || "[]");
-  const userIndex = users.findIndex((u: any) => u.email === userEmail);
-  
-  if (userIndex !== -1) {
-    const user = users[userIndex];
-    if (user.role !== "student") return user;
-    
-    const todayStr = new Date().toISOString().split("T")[0];
-    const lastLogin = user.lastLoginDate || "";
-    
-    if (!lastLogin) {
-      user.streak = 1;
-      user.lastLoginDate = todayStr;
-    } else if (lastLogin !== todayStr) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split("T")[0];
-      
-      if (lastLogin === yesterdayStr) {
-        user.streak = (user.streak || 0) + 1;
-      } else {
-        user.streak = 1;
-      }
-      user.lastLoginDate = todayStr;
-      
-      user.xp = (user.xp || 0) + 10; 
-      
-      const xpHistory = user.xpHistory || [];
-      xpHistory.unshift({ amount: 10, reason: "Login Harian (Streak " + user.streak + ")", date: new Date().toISOString() });
-      if (xpHistory.length > 50) xpHistory.pop();
-      user.xpHistory = xpHistory;
+export const processDailyStreak = async (userEmail: string) => {
+  const { data: user } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", userEmail)
+    .single();
+
+  if (!user) return null;
+  if (!user.roles?.includes("student")) return user;
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  const lastLogin = user.last_login_date || "";
+
+  let newStreak = user.streak || 0;
+  let newXp = user.xp || 0;
+  const xpHistory = Array.isArray(user.xp_history) ? user.xp_history : [];
+
+  if (!lastLogin) {
+    newStreak = 1;
+  } else if (lastLogin !== todayStr) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+    if (lastLogin === yesterdayStr) {
+      newStreak = newStreak + 1;
+    } else {
+      newStreak = 1;
     }
-    
-    users[userIndex] = user;
-    localStorage.setItem("app_users", JSON.stringify(users));
-    return user;
+    newXp = newXp + 10;
+    xpHistory.unshift({ amount: 10, reason: `Login Harian (Streak ${newStreak})`, date: new Date().toISOString() });
+    if (xpHistory.length > 50) xpHistory.pop();
   }
-  return null;
+
+  await supabase
+    .from("users")
+    .update({ streak: newStreak, xp: newXp, xp_history: xpHistory, last_login_date: todayStr })
+    .eq("email", userEmail);
+
+  return { ...user, streak: newStreak, xp: newXp };
 };

@@ -4,6 +4,7 @@ import Card from "@/components/ui/Card";
 import Link from "next/link";
 import { calculateLevel } from "@/utils/gamification";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
   const [activeProgram, setActiveProgram] = useState<"snbt" | "tka">("snbt");
@@ -20,64 +21,59 @@ export default function Home() {
   const [approvedSubjects, setApprovedSubjects] = useState<string[]>([]);
 
   useEffect(() => {
-    setMounted(true);
-    const savedProgram = sessionStorage.getItem("activeProgram");
-    
-    const userRole = localStorage.getItem("userRole");
-    if (userRole && userRole !== "student") {
-      if (userRole === "admin" || userRole === "bendahara" || userRole === "sekretaris") {
-        router.push("/admin");
-      } else if (userRole === "teacher") {
-        router.push("/tutor");
-      }
-      return;
-    }
-    
-    if (savedProgram === "snbt" || savedProgram === "tka") {
-      setActiveProgram(savedProgram as "snbt" | "tka");
-    }
+    const init = async () => {
+      setMounted(true);
+      const savedProgram = sessionStorage.getItem("activeProgram");
 
-    const email = localStorage.getItem("userEmail");
-    const name = localStorage.getItem("userName");
-    if (name) setUserName(name);
-
-    if (email) {
-      const users = JSON.parse(localStorage.getItem("app_users") || "[]");
-      const user = users.find((u: any) => u.email === email);
-      if (user) {
-        const currentXp = user.xp || 0;
-        const streak = user.streak || 0;
-        const levelData = calculateLevel(currentXp);
-        setXpData({ xp: currentXp, streak, ...levelData });
+      const userRole = localStorage.getItem("userRole");
+      if (userRole && userRole !== "student") {
+        if (userRole === "admin" || userRole === "bendahara" || userRole === "sekretaris") {
+          router.push("/admin");
+        } else if (userRole === "teacher") {
+          router.push("/tutor");
+        }
+        return;
       }
-    }
-    
-    try {
+
+      if (savedProgram === "snbt" || savedProgram === "tka") {
+        setActiveProgram(savedProgram as "snbt" | "tka");
+      }
+
+      const email = localStorage.getItem("userEmail");
+      const name = localStorage.getItem("userName");
+      if (name) setUserName(name);
+
+      if (email) {
+        const { data: userData } = await supabase.from('users').select('xp,streak').eq('email', email).single();
+        if (userData) {
+          setXpData({ xp: userData.xp || 0, streak: userData.streak || 0, ...calculateLevel(userData.xp || 0) });
+        }
+      }
+
       const currentEmail = localStorage.getItem("userEmail") || "";
-      const currentName = localStorage.getItem("userName") || "";
-      const tx = JSON.parse(localStorage.getItem("transactions") || "[]");
-      const now = new Date().getTime();
-      
-      const activeApproved = tx.filter((t: any) => {
-        if (t.status !== "approved" || !t.approvedAt) return false;
-        if (t.user !== currentEmail && t.user !== currentName) return false;
-        
-        let days = 30;
-        if (t.package?.includes("2 Minggu")) days = 14;
-        
-        const expiry = new Date(t.approvedAt).getTime() + (days * 24 * 60 * 60 * 1000);
-        return now <= expiry;
-      });
+      if (currentEmail) {
+        const { data: txData } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_email', currentEmail)
+          .eq('status', 'approved');
+        if (txData) {
+          const now = Date.now();
+          const active = txData.filter(t => {
+            if (!t.approved_at) return false;
+            const days = t.package?.includes('2 Minggu') ? 14 : 30;
+            return now <= new Date(t.approved_at).getTime() + days * 24 * 60 * 60 * 1000;
+          });
+          setApprovedPackages(active.map(t => t.package));
+          setApprovedSubjects(active.filter(t => t.subject).map(t => t.subject));
+        }
+      }
 
-      const pkgs = activeApproved.map((t: any) => t.package);
-      const subjs = activeApproved.filter((t: any) => t.subject).map((t: any) => t.subject);
-      setApprovedPackages(pkgs);
-      setApprovedSubjects(subjs);
-    } catch (e) {}
-
-    if (localStorage.getItem("tour_done") !== "true") {
-      setShowTour(true);
-    }
+      if (localStorage.getItem("tour_done") !== "true") {
+        setShowTour(true);
+      }
+    };
+    init();
   }, []);
 
   const hasWajib = approvedPackages.some(p => p.includes("Wajib"));
