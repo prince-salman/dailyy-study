@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { addXP } from "@/utils/gamification";
+import { supabase } from "@/lib/supabase";
 
 export default function LiveClassStudent() {
   const [session, setSession] = useState<any>(null);
@@ -24,14 +25,28 @@ export default function LiveClassStudent() {
     setUserName(localStorage.getItem("userName") || "Siswa");
     setUserEmail(localStorage.getItem("userEmail") || "");
 
-    const interval = setInterval(() => {
-      const s = JSON.parse(localStorage.getItem("live_session") || "null");
-      setSession((prev: any) => {
-        if (!prev && s) {
-          addXP(100, "Mengikuti Kelas Live");
-        }
-        return s;
-      });
+    const interval = setInterval(async () => {
+      const { data: liveData } = await supabase
+        .from("live_session")
+        .select("*")
+        .eq("id", 1)
+        .single();
+
+      if (liveData?.is_live) {
+        const sessionObj = {
+          isLive: true,
+          liveTitle: liveData.live_title,
+          zoomMeetingId: liveData.zoom_meeting_id,
+          zoomLink: liveData.zoom_link,
+          zoomPasscode: liveData.zoom_passcode,
+        };
+        setSession((prev: any) => {
+          if (!prev) addXP(100, "Mengikuti Kelas Live");
+          return sessionObj;
+        });
+      } else {
+        setSession(null);
+      }
 
       const c = JSON.parse(localStorage.getItem("live_chat") || "[]");
       if (c.length !== chat.length) {
@@ -43,26 +58,21 @@ export default function LiveClassStudent() {
       const myHand = hands.find((h: any) => h.email === localStorage.getItem("userEmail"));
       if (myHand) {
         setHasRaisedHand(true);
-        if (myHand.acc) {
-          setIsAcc(true);
-        }
+        if (myHand.acc) setIsAcc(true);
       } else {
         setHasRaisedHand(false);
         setIsAcc(false);
       }
 
       const banned = JSON.parse(localStorage.getItem("live_banned") || "[]");
-      if (banned.includes(localStorage.getItem("userEmail"))) {
-        setIsBanned(true);
-      }
+      if (banned.includes(localStorage.getItem("userEmail"))) setIsBanned(true);
 
       setPinnedMsg(JSON.parse(localStorage.getItem("live_pinned") || "null"));
       setActivePoll(JSON.parse(localStorage.getItem("live_poll") || "null"));
-      
+
       const currentReactions = JSON.parse(localStorage.getItem("live_reactions") || "[]");
-      const recentReactions = currentReactions.filter((r: any) => Date.now() - r.timestamp < 3000);
-      setReactions(recentReactions);
-      
+      setReactions(currentReactions.filter((r: any) => Date.now() - r.timestamp < 3000));
+
       setStayTime(prev => {
         const next = prev + 1;
         if (next === 5 && !absensiRecorded) {
@@ -71,7 +81,6 @@ export default function LiveClassStudent() {
         }
         return next;
       });
-      
     }, 1000);
 
     return () => clearInterval(interval);

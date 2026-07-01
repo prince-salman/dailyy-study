@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function TryoutQuestions() {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -13,26 +14,30 @@ export default function TryoutQuestions() {
   const [correctIdx, setCorrectIdx] = useState(0);
   const [videoUrl, setVideoUrl] = useState("");
 
+  const loadQuestions = async () => {
+    const { data } = await supabase.from("tryout_questions").select("*").order("id");
+    setQuestions(data || []);
+  };
+
   useEffect(() => {
     const subjects = JSON.parse(localStorage.getItem("userSubjects") || "[]");
     setUserSubjects(subjects);
     if (subjects.length > 0) setSubject(subjects[0]);
-
-    const saved = JSON.parse(localStorage.getItem("tutor_tryout_questions") || "[]");
-    if (saved.length > 0) {
-      setQuestions(saved);
-    } else {
-      setQuestions([]);
-      localStorage.setItem("tutor_tryout_questions", JSON.stringify([]));
-    }
+    loadQuestions();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!qText.trim()) return;
-    const newQ = { id: Date.now(), q: qText, subject: subject || "Umum", options, ans: correctIdx, videoUrl, errorRate: Math.floor(Math.random() * 80) + 10 };
-    const updated = [...questions, newQ];
-    setQuestions(updated);
-    localStorage.setItem("tutor_tryout_questions", JSON.stringify(updated));
+    await supabase.from("tryout_questions").insert({
+      id: Date.now(),
+      q: qText,
+      options,
+      ans: correctIdx,
+      subject: subject || "Umum",
+      video_url: videoUrl,
+      error_rate: Math.floor(Math.random() * 80) + 10,
+    });
+    await loadQuestions();
     setShowForm(false);
     setQText("");
     setOptions(["", "", "", ""]);
@@ -44,49 +49,47 @@ export default function TryoutQuestions() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       const text = evt.target?.result as string;
-      const lines = text.split('\\n');
+      const lines = text.split("\\n");
       const newQs = [];
       for (let i = 1; i < lines.length; i++) {
-        const parts = lines[i].split(',');
+        const parts = lines[i].split(",");
         if (parts.length >= 6) {
-          
           newQs.push({
             id: Date.now() + i,
             q: parts[0],
             options: [parts[1], parts[2], parts[3], parts[4]],
             ans: parseInt(parts[5]),
             subject: parts[6] || subject || "Umum",
-            videoUrl: parts[7] || "",
-            errorRate: Math.floor(Math.random() * 80) + 10
+            video_url: parts[7] || "",
+            error_rate: Math.floor(Math.random() * 80) + 10,
           });
         }
       }
-      const updated = [...questions, ...newQs];
-      setQuestions(updated);
-      localStorage.setItem("tutor_tryout_questions", JSON.stringify(updated));
+      if (newQs.length > 0) {
+        await supabase.from("tryout_questions").insert(newQs);
+        await loadQuestions();
+      }
       alert(`${newQs.length} Soal berhasil diimpor!`);
     };
     reader.readAsText(file);
   };
 
-  const handleDelete = (id: number) => {
-    const updated = questions.filter(q => q.id !== id);
-    setQuestions(updated);
-    localStorage.setItem("tutor_tryout_questions", JSON.stringify(updated));
+  const handleDelete = async (id: number) => {
+    await supabase.from("tryout_questions").delete().eq("id", id);
+    setQuestions((prev) => prev.filter((q) => q.id !== id));
   };
 
   const handleGenerateAI = () => {
     setIsGenerating(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       const aiQs = [
-        { id: Date.now() + 1, q: "Sebuah kereta berjalan dengan kecepatan 80 km/jam. Berapa waktu yang dibutuhkan untuk menempuh 200 km?", options: ["2 jam", "2.5 jam", "3 jam", "3.5 jam"], ans: 1 },
-        { id: Date.now() + 2, q: "Pilihlah kata yang tidak termasuk dalam kelompoknya.", options: ["Meja", "Kursi", "Lemari", "Sapu"], ans: 3 }
+        { id: Date.now() + 1, q: "Sebuah kereta berjalan dengan kecepatan 80 km/jam. Berapa waktu yang dibutuhkan untuk menempuh 200 km?", options: ["2 jam", "2.5 jam", "3 jam", "3.5 jam"], ans: 1, subject: subject || "Umum", video_url: "", error_rate: Math.floor(Math.random() * 80) + 10 },
+        { id: Date.now() + 2, q: "Pilihlah kata yang tidak termasuk dalam kelompoknya.", options: ["Meja", "Kursi", "Lemari", "Sapu"], ans: 3, subject: subject || "Umum", video_url: "", error_rate: Math.floor(Math.random() * 80) + 10 },
       ];
-      const updated = [...questions, ...aiQs];
-      setQuestions(updated);
-      localStorage.setItem("tutor_tryout_questions", JSON.stringify(updated));
+      await supabase.from("tryout_questions").insert(aiQs);
+      await loadQuestions();
       setIsGenerating(false);
     }, 2000);
   };
@@ -104,7 +107,7 @@ export default function TryoutQuestions() {
             <i className="fas fa-file-excel mr-2"></i> Import CSV
           </label>
           <button onClick={() => setShowForm(!showForm)} className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors border border-slate-700 shadow-sm">
-            <i className={`fas ${showForm ? 'fa-times' : 'fa-plus'} mr-2`}></i>{showForm ? 'Batal' : 'Tambah Manual'}
+            <i className={`fas ${showForm ? "fa-times" : "fa-plus"} mr-2`}></i>{showForm ? "Batal" : "Tambah Manual"}
           </button>
           <button onClick={handleGenerateAI} disabled={isGenerating} className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(79,70,229,0.4)] flex items-center">
             {isGenerating ? <i className="fas fa-circle-notch fa-spin mr-2"></i> : <i className="fas fa-magic mr-2"></i>}
@@ -120,12 +123,12 @@ export default function TryoutQuestions() {
             {userSubjects.length > 0 && (
               <div>
                 <label className="block text-sm font-bold text-slate-400 mb-2">Mata Pelajaran</label>
-                <select 
+                <select
                   value={subject}
-                  onChange={e => setSubject(e.target.value)}
+                  onChange={(e) => setSubject(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-indigo-500 outline-none transition-colors"
                 >
-                  {userSubjects.map(sub => (
+                  {userSubjects.map((sub) => (
                     <option key={sub} value={sub}>{sub}</option>
                   ))}
                   <option value="Umum">Umum / Lainnya</option>
@@ -134,9 +137,9 @@ export default function TryoutQuestions() {
             )}
             <div>
               <label className="block text-sm font-bold text-slate-400 mb-2">Pertanyaan</label>
-              <textarea 
+              <textarea
                 value={qText}
-                onChange={e => setQText(e.target.value)}
+                onChange={(e) => setQText(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-indigo-500 outline-none transition-colors"
                 rows={3}
                 placeholder="Ketik pertanyaan di sini..."
@@ -147,17 +150,17 @@ export default function TryoutQuestions() {
                 <div key={idx}>
                   <label className="block text-xs font-bold text-slate-500 mb-1">Opsi {String.fromCharCode(65 + idx)}</label>
                   <div className="flex items-center gap-2">
-                    <input 
-                      type="radio" 
-                      name="correct_ans" 
+                    <input
+                      type="radio"
+                      name="correct_ans"
                       checked={correctIdx === idx}
                       onChange={() => setCorrectIdx(idx)}
                       className="w-4 h-4 text-indigo-600 bg-slate-950 border-slate-800"
                     />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={opt}
-                      onChange={e => {
+                      onChange={(e) => {
                         const newOpts = [...options];
                         newOpts[idx] = e.target.value;
                         setOptions(newOpts);
@@ -171,10 +174,10 @@ export default function TryoutQuestions() {
             </div>
             <div>
               <label className="block text-sm font-bold text-slate-400 mb-2">URL Video Pembahasan (Opsional)</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={videoUrl}
-                onChange={e => setVideoUrl(e.target.value)}
+                onChange={(e) => setVideoUrl(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-indigo-500 outline-none transition-colors"
                 placeholder="https://youtube.com/watch?v=..."
               />
@@ -195,14 +198,14 @@ export default function TryoutQuestions() {
             <p className="text-slate-400 font-semibold">Belum ada soal Tryout.</p>
           </div>
         ) : (
-          questions.filter(q => userSubjects.includes(q.subject) || q.subject === "Umum" || userSubjects.length === 0).map((q, i) => (
+          questions.filter((q) => userSubjects.includes(q.subject) || q.subject === "Umum" || userSubjects.length === 0).map((q, i) => (
             <div key={q.id} className="bg-slate-900 p-5 rounded-2xl border border-slate-800 group hover:border-slate-700 transition-colors">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex flex-col">
                   {q.subject && <span className="text-xs font-bold text-indigo-400 mb-1">{q.subject}</span>}
                   <h3 className="font-bold text-white text-lg"><span className="text-slate-500 mr-2">{i + 1}.</span>{q.q}</h3>
-                  {q.videoUrl && (
-                    <a href={q.videoUrl} target="_blank" rel="noreferrer" className="text-xs text-rose-400 mt-2 hover:underline flex items-center gap-1 w-fit">
+                  {q.video_url && (
+                    <a href={q.video_url} target="_blank" rel="noreferrer" className="text-xs text-rose-400 mt-2 hover:underline flex items-center gap-1 w-fit">
                       <i className="fab fa-youtube"></i> Video Pembahasan Tersedia
                     </a>
                   )}
@@ -210,7 +213,7 @@ export default function TryoutQuestions() {
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col items-end">
                     <span className="text-[0.65rem] uppercase font-bold text-slate-500 tracking-wider">Kesalahan Siswa</span>
-                    <span className={`text-sm font-black ${q.errorRate > 50 ? 'text-rose-500' : 'text-emerald-500'}`}>{q.errorRate || 0}%</span>
+                    <span className={`text-sm font-black ${q.error_rate > 50 ? "text-rose-500" : "text-emerald-500"}`}>{q.error_rate || 0}%</span>
                   </div>
                   <button onClick={() => handleDelete(q.id)} className="text-slate-500 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100">
                     <i className="fas fa-trash-alt"></i>
@@ -219,8 +222,8 @@ export default function TryoutQuestions() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
                 {q.options.map((opt: string, idx: number) => (
-                  <div key={idx} className={`p-3 rounded-xl border text-sm font-semibold flex items-center gap-3 ${idx === q.ans ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-slate-950 border-slate-800 text-slate-300'}`}>
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${idx === q.ans ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                  <div key={idx} className={`p-3 rounded-xl border text-sm font-semibold flex items-center gap-3 ${idx === q.ans ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-slate-950 border-slate-800 text-slate-300"}`}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${idx === q.ans ? "bg-emerald-500 text-white" : "bg-slate-800 text-slate-400"}`}>
                       {String.fromCharCode(65 + idx)}
                     </span>
                     {opt}

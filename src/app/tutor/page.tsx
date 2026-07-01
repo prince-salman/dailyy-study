@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function AdminLiveClass() {
   const [zoomLink, setZoomLink] = useState("");
@@ -19,19 +20,25 @@ export default function AdminLiveClass() {
   const [prevHandsCount, setPrevHandsCount] = useState(0);
 
   useEffect(() => {
-    const session = JSON.parse(localStorage.getItem("live_session") || "{}");
-    if (session.isLive) {
-      setIsLive(true);
-      setZoomLink(session.zoomLink || "");
-      setZoomMeetingId(session.zoomMeetingId || "");
-      setZoomPasscode(session.zoomPasscode || "");
-      setLiveTitle(session.liveTitle || "");
-    }
+    supabase
+      .from("live_session")
+      .select("*")
+      .eq("id", 1)
+      .single()
+      .then(({ data }) => {
+        if (data?.is_live) {
+          setIsLive(true);
+          setZoomLink(data.zoom_link || "");
+          setZoomMeetingId(data.zoom_meeting_id || "");
+          setZoomPasscode(data.zoom_passcode || "");
+          setLiveTitle(data.live_title || "");
+        }
+      });
 
     const interval = setInterval(() => {
       const currentHands = JSON.parse(localStorage.getItem("live_hands") || "[]");
       setHands(currentHands);
-      
+
       const currentChat = JSON.parse(localStorage.getItem("live_chat") || "[]");
       setChat(currentChat);
 
@@ -54,19 +61,28 @@ export default function AdminLiveClass() {
 
   const [liveError, setLiveError] = useState("");
 
-  const handleStartLive = () => {
+  const handleStartLive = async () => {
     if (!liveTitle || !zoomMeetingId || !zoomPasscode || !zoomLink) {
       setLiveError("Harap isi semua kolom informasi Zoom dan Judul Live.");
       return;
     }
     setLiveError("");
-    const session = { isLive: true, zoomLink, zoomMeetingId, zoomPasscode, liveTitle };
-    localStorage.setItem("live_session", JSON.stringify(session));
+    await supabase.from("live_session").update({
+      is_live: true,
+      zoom_link: zoomLink,
+      zoom_meeting_id: zoomMeetingId,
+      zoom_passcode: zoomPasscode,
+      live_title: liveTitle,
+      updated_at: new Date().toISOString(),
+    }).eq("id", 1);
     setIsLive(true);
   };
 
-  const handleStopLive = () => {
-    localStorage.removeItem("live_session");
+  const handleStopLive = async () => {
+    await supabase.from("live_session").update({
+      is_live: false,
+      updated_at: new Date().toISOString(),
+    }).eq("id", 1);
     localStorage.removeItem("live_hands");
     localStorage.removeItem("live_pinned");
     localStorage.removeItem("live_poll");
