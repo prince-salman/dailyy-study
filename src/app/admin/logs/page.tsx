@@ -1,12 +1,20 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function AuditLogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
-    const l = JSON.parse(localStorage.getItem("audit_logs") || "[]");
-    setLogs(l);
+    const loadLogs = async () => {
+      const { data } = await supabase
+        .from("audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (data) setLogs(data);
+    };
+    loadLogs();
   }, []);
 
   return (
@@ -33,12 +41,14 @@ export default function AuditLogsPage() {
               <tbody className="divide-y divide-slate-700">
                 {logs.map((log, i) => (
                   <tr key={i} className="hover:bg-slate-700/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-400 text-xs font-mono">{log.time}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-400 text-xs font-mono">
+                      {new Date(log.created_at).toLocaleString("id-ID")}
+                    </td>
                     <td className="px-6 py-4 font-medium text-white flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[0.6rem]">
                         <i className="fas fa-user"></i>
                       </div>
-                      {log.user} <span className="text-[0.6rem] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full ml-1">{log.role}</span>
+                      {log.user_name} <span className="text-[0.6rem] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full ml-1">{log.user_role}</span>
                     </td>
                     <td className="px-6 py-4">{log.action}</td>
                   </tr>

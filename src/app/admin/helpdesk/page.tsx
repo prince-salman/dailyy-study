@@ -1,34 +1,38 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { addAuditLog } from "@/utils/auditLogger";
 
 export default function AdminHelpdesk() {
   const [tickets, setTickets] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchTickets = () => {
-      const t = JSON.parse(localStorage.getItem("helpdesk_tickets") || "[]");
-      setTickets(t);
+    const loadTickets = async () => {
+      const { data } = await supabase
+        .from("helpdesk_tickets")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (data) setTickets(data);
     };
-    fetchTickets();
-    const interval = setInterval(fetchTickets, 3000);
-    return () => clearInterval(interval);
+    loadTickets();
   }, []);
 
-  const handleResolve = (id: string) => {
-    const updated = tickets.map(t => 
+  const handleResolve = async (id: string) => {
+    await supabase
+      .from("helpdesk_tickets")
+      .update({ status: "resolved" })
+      .eq("id", id);
+    const updated = tickets.map(t =>
       t.id === id ? { ...t, status: "resolved" } : t
     );
     setTickets(updated);
-    localStorage.setItem("helpdesk_tickets", JSON.stringify(updated));
     const t = tickets.find(ticket => ticket.id === id);
-    if (t) addAuditLog(`Menyelesaikan tiket bantuan dari ${t.user}: ${t.subject}`);
+    if (t) await addAuditLog(`Menyelesaikan tiket bantuan dari ${t.user_name}: ${t.subject}`);
   };
 
-  const handleDelete = (id: string) => {
-    const updated = tickets.filter(t => t.id !== id);
-    setTickets(updated);
-    localStorage.setItem("helpdesk_tickets", JSON.stringify(updated));
+  const handleDelete = async (id: string) => {
+    await supabase.from("helpdesk_tickets").delete().eq("id", id);
+    setTickets(tickets.filter(t => t.id !== id));
   };
 
   return (
@@ -44,12 +48,12 @@ export default function AdminHelpdesk() {
             <p className="text-sm">Tidak ada tiket bantuan yang terbuka.</p>
           </div>
         ) : (
-          tickets.slice().reverse().map((t, i) => (
+          tickets.map((t, i) => (
             <div key={i} className={`bg-slate-800 p-5 rounded-2xl border ${t.status === 'resolved' ? 'border-emerald-500/30' : 'border-rose-500/30'}`}>
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <h3 className="font-bold text-white text-lg">{t.subject}</h3>
-                  <p className="text-xs text-slate-400">Dari: <span className="text-indigo-300 font-bold">{t.user}</span> ({t.email}) &bull; {new Date(t.date).toLocaleDateString("id-ID")}</p>
+                  <p className="text-xs text-slate-400">Dari: <span className="text-indigo-300 font-bold">{t.user_name}</span> ({t.user_email}) &bull; {new Date(t.created_at).toLocaleDateString("id-ID")}</p>
                 </div>
                 <div>
                   {t.status === 'resolved' ? (

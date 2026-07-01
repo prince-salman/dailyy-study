@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { addAuditLog } from "@/utils/auditLogger";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 
@@ -16,29 +17,54 @@ export default function AdminDashboard() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const tx = JSON.parse(localStorage.getItem("transactions") || "[]");
-      setTransactions(tx);
-      const ex = JSON.parse(localStorage.getItem("expenses") || "[]");
-      setExpenses(ex);
-      const appUsers = JSON.parse(localStorage.getItem("app_users") || "[]");
-      setUsers(appUsers);
-      const notes = JSON.parse(localStorage.getItem("counseling_notes") || "{}");
-      setCounselingNotes(notes);
-    } catch (e) {}
+    const loadData = async () => {
+      const { data: txData } = await supabase
+        .from("transactions")
+        .select("*")
+        .order("date", { ascending: false });
+      if (txData) setTransactions(txData);
+
+      const { data: exData } = await supabase
+        .from("expenses")
+        .select("*")
+        .order("date", { ascending: false });
+      if (exData) setExpenses(exData);
+
+      const { data: usersData } = await supabase
+        .from("users")
+        .select("*")
+        .order("name");
+      if (usersData) setUsers(usersData);
+
+      const { data: notesData } = await supabase
+        .from("counseling_notes")
+        .select("*");
+      if (notesData) {
+        const notesMap: Record<string, string> = {};
+        notesData.forEach((n: any) => {
+          notesMap[n.user_id] = n.note;
+        });
+        setCounselingNotes(notesMap);
+      }
+    };
+    loadData();
   }, []);
 
-  const handleApprove = (id: string) => {
-    const updated = transactions.map(t => 
-      t.id === id ? { ...t, status: "approved", approvedAt: new Date().toISOString() } : t
+  const handleApprove = async (id: string) => {
+    const approvedAt = new Date().toISOString();
+    await supabase
+      .from("transactions")
+      .update({ status: "approved", approved_at: approvedAt })
+      .eq("id", id);
+    const updated = transactions.map(t =>
+      t.id === id ? { ...t, status: "approved", approved_at: approvedAt } : t
     );
     setTransactions(updated);
-    localStorage.setItem("transactions", JSON.stringify(updated));
     const tx = updated.find(t => t.id === id);
-    if (tx) addAuditLog(`Menyetujui transaksi ${tx.package} dari ${tx.user} (Rp ${tx.price})`);
+    if (tx) await addAuditLog(`Menyetujui transaksi ${tx.package} dari ${tx.user_email} (Rp ${tx.price})`);
   };
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     if (!newExpenseName || !newExpensePrice) return;
     const price = parseInt(newExpensePrice);
     if (isNaN(price)) return;
@@ -47,58 +73,59 @@ export default function AdminDashboard() {
       id: Date.now().toString(),
       name: newExpenseName,
       price: price,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
     };
 
-    const updated = [...expenses, newEx];
-    setExpenses(updated);
-    localStorage.setItem("expenses", JSON.stringify(updated));
-    addAuditLog(`Menambahkan pengeluaran: ${newExpenseName} (Rp ${price})`);
+    await supabase.from("expenses").insert(newEx);
+    setExpenses([newEx, ...expenses]);
+    await addAuditLog(`Menambahkan pengeluaran: ${newExpenseName} (Rp ${price})`);
     setNewExpenseName("");
     setNewExpensePrice("");
   };
 
-  const handleDeleteExpense = (id: string) => {
+  const handleDeleteExpense = async (id: string) => {
     const ex = expenses.find(e => e.id === id);
-    const updated = expenses.filter(e => e.id !== id);
-    setExpenses(updated);
-    localStorage.setItem("expenses", JSON.stringify(updated));
-    if (ex) addAuditLog(`Menghapus pengeluaran: ${ex.name}`);
+    await supabase.from("expenses").delete().eq("id", id);
+    setExpenses(expenses.filter(e => e.id !== id));
+    if (ex) await addAuditLog(`Menghapus pengeluaran: ${ex.name}`);
   };
 
   const approvedTx = transactions.filter(t => t.status === "approved");
-  const totalSiswa = new Set(approvedTx.map(t => t.user)).size;
+  const totalSiswa = new Set(approvedTx.map(t => t.user_email)).size;
   const totalPendapatan = approvedTx.reduce((acc, t) => acc + (t.price || 0), 0);
   const totalPengeluaran = expenses.reduce((acc, e) => acc + (e.price || 0), 0);
   const saldoBersih = totalPendapatan - totalPengeluaran;
 
-  const handlePrint = () => {
-    addAuditLog("Mencetak Laporan Keuangan (PDF)");
+  const handlePrint = async () => {
+    await addAuditLog("Mencetak Laporan Keuangan (PDF)");
     window.print();
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     const header = "ID,Tanggal,User,Paket,Harga,Status\\n";
-    const csv = transactions.map(t => `${t.id},${new Date(t.date).toLocaleDateString("id-ID")},${t.user},${t.package},${t.price},${t.status}`).join("\\n");
-    const blob = new Blob([header + csv], { type: 'text/csv' });
+    const csv = transactions.map(t => `${t.id},${new Date(t.date).toLocaleDateString("id-ID")},${t.user_email},${t.package},${t.price},${t.status}`).join("\\n");
+    const blob = new Blob([header + csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `Laporan_Transaksi_DailyyStudy.csv`;
     a.click();
-    addAuditLog("Mengekspor Laporan Keuangan (CSV)");
+    await addAuditLog("Mengekspor Laporan Keuangan (CSV)");
   };
 
-  const handleSaveNote = (userId: string, note: string) => {
-    const updated = { ...counselingNotes, [userId]: note };
-    setCounselingNotes(updated);
-    localStorage.setItem("counseling_notes", JSON.stringify(updated));
+  const handleSaveNote = async (userId: string, note: string) => {
+    await supabase.from("counseling_notes").upsert({
+      user_id: userId,
+      note,
+      updated_at: new Date().toISOString(),
+    });
+    setCounselingNotes({ ...counselingNotes, [userId]: note });
     setEditingNoteId(null);
-    addAuditLog(`Memperbarui catatan konseling untuk user ID: ${userId}`);
+    await addAuditLog(`Memperbarui catatan konseling untuk user ID: ${userId}`);
   };
 
   const expiryAlerts = approvedTx.filter(t => {
-    const start = new Date(t.approvedAt || t.date);
+    const start = new Date(t.approved_at || t.date);
     const expiry = new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000);
     const diffDays = Math.ceil((expiry.getTime() - new Date().getTime()) / (1000 * 3600 * 24));
     return diffDays >= 0 && diffDays <= 3;
@@ -111,17 +138,15 @@ export default function AdminDashboard() {
     { name: "Mgg 4", Pemasukan: totalPendapatan * 0.1, Pengeluaran: totalPengeluaran * 0.2 },
   ];
 
-  const handleAdminChangePassword = (userId: string) => {
+  const handleAdminChangePassword = async (userId: string) => {
     if (!newPassword || newPassword.length < 6) return;
-    const updatedUsers = users.map(u => 
+    await supabase.from("users").update({ password: newPassword }).eq("id", userId);
+    const updatedUsers = users.map(u =>
       u.id === userId ? { ...u, password: newPassword } : u
     );
     setUsers(updatedUsers);
-    localStorage.setItem("app_users", JSON.stringify(updatedUsers));
-    
     const user = updatedUsers.find(u => u.id === userId);
-    if (user) addAuditLog(`Mengubah password akun: ${user.email}`);
-    
+    if (user) await addAuditLog(`Mengubah password akun: ${user.email}`);
     setEditingUserId(null);
     setNewPassword("");
   };
@@ -149,7 +174,7 @@ export default function AdminDashboard() {
             <h3 className="font-bold text-rose-500 mb-1">Notifikasi Jatuh Tempo</h3>
             <ul className="text-sm text-rose-300 list-disc list-inside">
               {expiryAlerts.map(t => (
-                <li key={t.id}>Paket {t.user} akan habis dalam waktu kurang dari 3 hari.</li>
+                <li key={t.id}>Paket {t.user_email} akan habis dalam waktu kurang dari 3 hari.</li>
               ))}
             </ul>
           </div>
@@ -204,11 +229,11 @@ export default function AdminDashboard() {
             <p className="text-sm font-bold text-slate-400">Belum ada transaksi</p>
           </div>
         ) : (
-          transactions.slice().reverse().map((tx, idx) => (
+          transactions.map((tx, idx) => (
             <div key={idx} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col gap-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="font-bold text-white text-sm">{tx.user}</div>
+                  <div className="font-bold text-white text-sm">{tx.user_email}</div>
                   <div className="text-xs text-slate-400">{tx.package} {tx.subject ? `- ${tx.subject}` : ''}</div>
                   <div className="text-emerald-400 font-bold text-sm mt-1">Rp {tx.price?.toLocaleString("id-ID")}</div>
                 </div>
@@ -273,7 +298,7 @@ export default function AdminDashboard() {
             <p className="text-sm font-bold text-slate-400">Belum ada catatan pengeluaran</p>
           </div>
         ) : (
-          expenses.slice().reverse().map((ex, idx) => (
+          expenses.map((ex, idx) => (
             <div key={idx} className="bg-slate-800 p-4 rounded-xl border border-rose-500/30 flex justify-between items-center">
               <div>
                 <div className="font-bold text-white text-sm">{ex.name}</div>
