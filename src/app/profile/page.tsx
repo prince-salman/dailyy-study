@@ -7,34 +7,50 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 const INIT_USERS = [
-  { id: "1", name: "Nabilla Maulana Putri", email: "nabilla@dailystudy.id", password: "password123", roles: ["sekretaris"], subjects: [] },
-  { id: "2", name: "Muhammad Wildan Yusufy", email: "wildan@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Sosiologi"] },
-  { id: "3", name: "Ibrahim Khalelurrahman", email: "ibrahim@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Matematika Tingkat Lanjut", "Matematika Wajib", "Biologi"] },
-  { id: "4", name: "Listiyana Utami", email: "listiyana@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Biologi", "Matematika Tingkat Lanjut"] },
-  { id: "5", name: "Anindyta Priatna", email: "anindyta@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Bahasa Indonesia"] },
-  { id: "6", name: "I Gede Rama Adijaya", email: "rama@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Ekonomi", "Sosiologi"] },
-  { id: "7", name: "Mufliha Khalida", email: "mufliha@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Bahasa Inggris"] },
-  { id: "8", name: "Muhammad Raja Nirwana", email: "raja@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Fisika"] },
-  { id: "10", name: "Asya Putri Hermawan", email: "asya@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Fundamental Matematika"] },
-  { id: "11", name: "Elsa Lovitasari", email: "elsa@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["PPKN", "Matematika Wajib"] },
-  { id: "12", name: "Nayla Harisky Puteri", email: "nayla@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Matematika Tingkat Lanjut", "Matematika Wajib"] },
-  { id: "13", name: "Syifa Anjani", email: "syifa@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Fisika"] },
-  { id: "14", name: "Faiz Ramadhan", email: "faiz@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Fundamental Matematika"] },
-  { id: "15", name: "Rangga Alditiyo Retadani", email: "rangga@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Geografi"] },
-  { id: "16", name: "Muhammad Syam Alfathin", email: "syam@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Kimia"] },
-  { id: "17", name: "Jessica Mauren Sinaga", email: "jessica@dailystudy.id", password: "password123", roles: ["teacher", "bendahara"], subjects: ["Geografi"] },
-  { id: "18", name: "Muhamad Salman", email: "salman@dailystudy.id", password: "salman123", roles: ["teacher", "admin"], subjects: ["Matematika Wajib"] },
-  { id: "19", name: "Farhan Lubis", email: "farhan@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Biologi"] },
-  { id: "20", name: "Hanif Muhammad Ridhwan", email: "hanif@dailystudy.id", password: "password123", roles: ["teacher"], subjects: ["Sejarah"] },
-  { id: "98", name: "Admin Utama", email: "admin@dailystudy.id", password: "Jual1909", roles: ["admin"], subjects: [] },
+  { id: "1",  name: "Nabilla Maulana Putri",      email: "nabilla@dailystudy.id",  password: "password123", roles: ["sekretaris"],           subjects: [] },
+  { id: "2",  name: "Muhammad Wildan Yusufy",      email: "wildan@dailystudy.id",   password: "password123", roles: ["teacher"],               subjects: ["Sosiologi"] },
+  { id: "3",  name: "Ibrahim Khalelurrahman",      email: "ibrahim@dailystudy.id",  password: "password123", roles: ["teacher"],               subjects: ["Matematika Tingkat Lanjut", "Matematika Wajib", "Biologi"] },
+  { id: "5",  name: "Anindyta Priatna",            email: "anindyta@dailystudy.id", password: "password123", roles: ["teacher"],               subjects: ["Bahasa Indonesia"] },
+  { id: "6",  name: "I Gede Rama Adijaya",         email: "rama@dailystudy.id",     password: "password123", roles: ["teacher"],               subjects: ["Ekonomi", "Sosiologi"] },
+  { id: "7",  name: "Mufliha Khalida",             email: "mufliha@dailystudy.id",  password: "password123", roles: ["teacher"],               subjects: ["Bahasa Inggris"] },
+  { id: "8",  name: "Muhammad Raja Nirwana",       email: "raja@dailystudy.id",     password: "password123", roles: ["teacher"],               subjects: ["Fisika"] },
+  { id: "9",  name: "Arumi Aulia",                 email: "arumi@dailystudy.id",    password: "password123", roles: ["sekretaris"],           subjects: [] },
+  { id: "10", name: "Asya Putri Hermawan",         email: "asya@dailystudy.id",     password: "password123", roles: ["teacher"],               subjects: ["Fundamental Matematika"] },
+  { id: "11", name: "Elsa Lovitasari",             email: "elsa@dailystudy.id",     password: "password123", roles: ["teacher"],               subjects: ["PPKN", "Matematika Wajib"] },
+  { id: "12", name: "Nayla Harisky Puteri",        email: "nayla@dailystudy.id",    password: "password123", roles: ["teacher"],               subjects: ["Matematika Tingkat Lanjut", "Matematika Wajib"] },
+  { id: "13", name: "Syifa Anjani",                email: "syifa@dailystudy.id",    password: "password123", roles: ["teacher"],               subjects: ["Fisika"] },
+  { id: "14", name: "Faiz Ramadhan",               email: "faiz@dailystudy.id",     password: "password123", roles: ["teacher"],               subjects: ["Fundamental Matematika"] },
+  { id: "15", name: "Rangga Alditiyo Retadani",    email: "rangga@dailystudy.id",   password: "password123", roles: ["teacher"],               subjects: ["Geografi"] },
+  { id: "16", name: "Muhammad Syam Alfathin",      email: "syam@dailystudy.id",     password: "password123", roles: ["teacher"],               subjects: ["Kimia"] },
+  { id: "17", name: "Jessica Mauren Sinaga",       email: "jessica@dailystudy.id",  password: "password123", roles: ["teacher", "bendahara"], subjects: ["Geografi"] },
+  { id: "18", name: "Muhamad Salman",              email: "salman@dailystudy.id",   password: "salman123",   roles: ["teacher", "admin"],    subjects: ["Matematika Wajib"] },
+  { id: "19", name: "Farhan Lubis",                email: "farhan@dailystudy.id",   password: "password123", roles: ["teacher"],               subjects: ["Biologi"] },
+  { id: "20", name: "Hanif Muhammad Ridhwan",      email: "hanif@dailystudy.id",    password: "password123", roles: ["teacher"],               subjects: ["Sejarah"] },
+  { id: "98", name: "Admin Utama",                 email: "admin@dailystudy.id",    password: "Jual1909",    roles: ["admin"],                subjects: [] },
 ];
 
+const DELETED_EMAILS = ["listiyana@dailystudy.id"];
+
 async function seedInitUsers() {
+  await supabase.from("users").delete().in("email", DELETED_EMAILS);
+
   for (const u of INIT_USERS) {
-    await supabase.from("users").upsert(
-      { ...u, xp: 0, streak: 0, last_login_date: "", xp_history: [] },
-      { onConflict: "email", ignoreDuplicates: true }
-    );
+    const { data: existing } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", u.email)
+      .single();
+
+    if (existing) {
+      await supabase
+        .from("users")
+        .update({ name: u.name, roles: u.roles, subjects: u.subjects })
+        .eq("email", u.email);
+    } else {
+      await supabase
+        .from("users")
+        .insert({ ...u, xp: 0, streak: 0, last_login_date: "", xp_history: [] });
+    }
   }
 }
 
