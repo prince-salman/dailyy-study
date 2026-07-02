@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dailyy Study
 
-## Getting Started
+Platform bimbingan belajar (les online) interaktif dengan fitur tryout UTBK, kelas live (Zoom), gamifikasi (XP/Level), dan dashboard admin/tutor.
 
-First, run the development server:
+## Tech Stack
+- **Framework:** Next.js (App Router)
+- **Styling:** Tailwind CSS
+- **Database / Auth:** Supabase (PostgreSQL)
+- **Face Recognition:** face-api.js (Anti-cheat ujian)
 
+## Setup Local
+
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Buat file `.env.local` di root folder dan isi dengan konfigurasi Supabase:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://[PROJECT-ID].supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=[ANON-KEY]
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Jalankan server:
+```bash
+npm run dev
+```
+Buka `http://localhost:3000` di browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Database (Supabase)
+Semua tabel sudah dikonfigurasi melalui script SQL. Saat aplikasi pertama kali dijalankan, sistem akan otomatis melakukan *seeding* akun kru (Admin, Tutor, dsb) ketika halaman `/profile` diakses.
 
-## Learn More
+## Akses Akun
+Role dan pembagian mata pelajaran untuk tutor sudah di-hardcode sementara di dalam sistem *seed* dan tersimpan di database.
+- **Admin Default:** `admin@dailystudy.id`
+- **Password Default:** `Jual1909` (Untuk staf/tutor lain: `password123` atau `salman123`)
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+Aplikasi ini sudah siap di-deploy ke Vercel. Jangan lupa masukkan variabel di `.env.local` ke dalam menu Environment Variables di Vercel Settings.
