@@ -16,7 +16,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="shrink-0 h-[80px] bg-bg-glass backdrop-blur-xl border-t border-border flex overflow-x-auto no-scrollbar justify-start sm:justify-center items-center z-50 pb-4 md:pb-0 md:h-[65px] md:gap-20 px-2 space-x-2 sm:space-x-8">
+    <div className="fixed bottom-0 left-0 right-0 w-full shrink-0 h-[80px] bg-bg-glass backdrop-blur-xl border-t border-border flex overflow-x-auto no-scrollbar justify-start sm:justify-center items-center z-50 pb-4 md:pb-0 md:h-[65px] md:gap-20 px-2 space-x-2 sm:space-x-8">
       {navItems.map((item) => {
         const isActive = pathname === item.path;
         return (
