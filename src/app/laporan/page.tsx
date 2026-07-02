@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Card from "@/components/ui/Card";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 export default function LaporanPage() {
   const [history, setHistory] = useState<any[]>([]);
@@ -9,8 +10,18 @@ export default function LaporanPage() {
 
   useEffect(() => {
     setMounted(true);
-    const h = JSON.parse(localStorage.getItem("tryout_history") || "[]");
-    setHistory(h);
+    const email = localStorage.getItem("userEmail") || "";
+    if (!email) return;
+
+    const load = async () => {
+      const { data } = await supabase
+        .from("tryout_history")
+        .select("*")
+        .eq("user_email", email)
+        .order("date", { ascending: false });
+      setHistory(data || []);
+    };
+    load();
   }, []);
 
   if (!mounted) return null;
@@ -39,7 +50,7 @@ export default function LaporanPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {history.slice().reverse().map((item, idx) => {
+          {history.map((item, idx) => {
             const score = item.score ?? 0;
             const isGood = score >= 600;
             return (

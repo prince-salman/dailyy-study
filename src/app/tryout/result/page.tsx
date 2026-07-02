@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 import { addXP } from "@/utils/gamification";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
@@ -12,18 +13,32 @@ export default function TryoutResult() {
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const history = JSON.parse(localStorage.getItem("tryout_history") || "[]");
-    if (history.length > 0) {
-      const latest = history[history.length - 1];
-      setResult(latest);
-      
-      if (!latest.xpClaimed) {
-        addXP(200, "Menyelesaikan Try Out SNBT");
-        latest.xpClaimed = true;
-        localStorage.setItem("tryout_history", JSON.stringify(history));
-        setTimeout(() => setShowNPS(true), 2000);
+    const load = async () => {
+      const email = localStorage.getItem("userEmail") || "";
+      if (!email) return;
+
+      const { data } = await supabase
+        .from("tryout_history")
+        .select("*")
+        .eq("user_email", email)
+        .order("date", { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        const latest = data[0];
+        setResult(latest);
+
+        if (!latest.xp_claimed) {
+          await addXP(200, "Menyelesaikan Try Out SNBT");
+          await supabase
+            .from("tryout_history")
+            .update({ xp_claimed: true })
+            .eq("id", latest.id);
+          setTimeout(() => setShowNPS(true), 2000);
+        }
       }
-    }
+    };
+    load();
   }, []);
 
   const handleDownloadPDF = async () => {
@@ -47,25 +62,25 @@ export default function TryoutResult() {
             <i className="fas fa-arrow-left mr-2"></i>Kembali ke Dashboard
           </button>
         </Link>
-        <button 
+        <button
           onClick={handleDownloadPDF}
           className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-xl text-sm transition-colors shadow-lg"
         >
           <i className="fas fa-file-pdf mr-2"></i> Download Laporan PDF
         </button>
       </div>
-      
+
       <div className="max-w-3xl mx-auto" ref={reportRef}>
         <div className="bg-slate-800 rounded-3xl p-8 border border-slate-700 shadow-2xl text-center relative overflow-hidden mb-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -ml-20 -mb-20"></div>
-          
+
           <h1 className="text-3xl font-extrabold text-white mb-2 relative z-10">Ujian Selesai!</h1>
-          <p className="text-slate-400 font-semibold relative z-10 mb-8">Kerja bagus! Berikut adalah skor simulasi UTBK kamu berdasarkan pembobotan IRT.</p>
-          
+          <p className="text-slate-400 font-semibold relative z-10 mb-8">Kerja bagus! Berikut adalah skor simulasi UTBK kamu.</p>
+
           <div className="inline-flex flex-col items-center justify-center w-48 h-48 rounded-full border-8 border-indigo-500/30 bg-slate-900 relative z-10 mb-8 shadow-[0_0_50px_rgba(99,102,241,0.2)]">
             <span className="text-5xl font-black text-white">{result.score}</span>
-            <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest mt-1">Skor IRT</span>
+            <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest mt-1">Skor</span>
           </div>
 
           <div className="flex justify-center gap-6 relative z-10 mb-8">
@@ -87,105 +102,25 @@ export default function TryoutResult() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-700">
                 <p className="text-xs font-bold text-slate-400 mb-1">Kedokteran (UI/UGM)</p>
-                <div className="w-full bg-slate-800 rounded-full h-2 mb-1"><div className="bg-rose-500 h-2 rounded-full" style={{ width: '25%' }}></div></div>
+                <div className="w-full bg-slate-800 rounded-full h-2 mb-1"><div className="bg-rose-500 h-2 rounded-full" style={{ width: "25%" }}></div></div>
                 <p className="text-[0.65rem] text-rose-400 font-bold">Peluang Rendah (25%)</p>
               </div>
               <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-700">
                 <p className="text-xs font-bold text-slate-400 mb-1">Ilmu Komunikasi (UB)</p>
-                <div className="w-full bg-slate-800 rounded-full h-2 mb-1"><div className="bg-emerald-500 h-2 rounded-full" style={{ width: '80%' }}></div></div>
+                <div className="w-full bg-slate-800 rounded-full h-2 mb-1"><div className="bg-emerald-500 h-2 rounded-full" style={{ width: "80%" }}></div></div>
                 <p className="text-[0.65rem] text-emerald-400 font-bold">Peluang Tinggi (80%)</p>
               </div>
             </div>
           </div>
-
-          {result.breakdown && (
-            <div className="relative z-10 bg-slate-900/50 p-4 rounded-2xl border border-slate-700 text-left">
-              <h3 className="text-sm font-bold text-white mb-3"><i className="fas fa-chart-pie text-indigo-400 mr-2"></i> Analisis Per Sub-tes</h3>
-              <div className="flex flex-col gap-3">
-                {Object.keys(result.breakdown).map((subject) => {
-                  const data = result.breakdown[subject];
-                  const percentage = Math.round((data.correct / data.total) * 100);
-                  let statusColor = "text-rose-400";
-                  let barColor = "bg-rose-500";
-                  let message = "Sangat lemah, butuh banyak latihan!";
-                  
-                  if (percentage >= 80) {
-                    statusColor = "text-emerald-400";
-                    barColor = "bg-emerald-500";
-                    message = "Sangat baik, pertahankan!";
-                  } else if (percentage >= 50) {
-                    statusColor = "text-amber-400";
-                    barColor = "bg-amber-500";
-                    message = "Cukup, tapi perlu ditingkatkan.";
-                  }
-
-                  return (
-                    <div key={subject}>
-                      <div className="flex justify-between text-xs font-bold mb-1">
-                        <span className="text-slate-300">{subject}</span>
-                        <span className={statusColor}>{data.correct}/{data.total} ({percentage}%)</span>
-                      </div>
-                      <div className="w-full bg-slate-800 rounded-full h-2 mb-1">
-                        <div className={`${barColor} h-2 rounded-full`} style={{ width: `${percentage}%` }}></div>
-                      </div>
-                      <p className="text-[0.65rem] text-slate-400 italic">{message}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
-        <h2 className="text-2xl font-extrabold text-white mb-4">Kunci & Pembahasan</h2>
-        
-        <div className="flex flex-col gap-4">
-          {result.questions.map((q: any, idx: number) => {
-            const myAns = result.answers[idx];
-            const isCorrect = myAns === q.correct;
-            
-            return (
-              <div key={q.id} className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                <div className="flex gap-4 mb-4">
-                  <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-white font-bold ${isCorrect ? 'bg-emerald-500' : 'bg-rose-500'}`}>
-                    <i className={`fas ${isCorrect ? 'fa-check' : 'fa-times'}`}></i>
-                  </div>
-                  <div className="w-full">
-                    <div className="flex justify-between items-center mb-2">
-                       <span className="text-xs font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded">{q.subtest || "Umum"}</span>
-                       <span className="text-[0.6rem] text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full">Bobot IRT: {q.weight || 1.0}</span>
-                    </div>
-                    <h3 className="text-white font-semibold mb-3 leading-relaxed">{idx + 1}. {q.question}</h3>
-                    <div className="flex flex-col gap-2">
-                      {q.options.map((opt: string, oIdx: number) => {
-                        let optStyle = "text-slate-400";
-                        if (oIdx === q.correct) optStyle = "text-emerald-400 font-bold bg-emerald-500/10 px-2 py-1 rounded";
-                        else if (oIdx === myAns && !isCorrect) optStyle = "text-rose-400 font-bold bg-rose-500/10 px-2 py-1 rounded line-through";
-                        
-                        return <div key={oIdx} className={optStyle}>{opt}</div>;
-                      })}
-                    </div>
-                  </div>
-                </div>
-                {!isCorrect && (
-                  <div className="mt-4 bg-slate-900 rounded-xl p-4 border border-slate-700 text-sm text-slate-300">
-                    <p className="font-bold text-indigo-400 mb-2"><i className="fas fa-lightbulb mr-2"></i>Pembahasan:</p>
-                    <p className="mb-4">Jawaban yang benar adalah <strong>{q.options[q.correct]}</strong>. Perhatikan konsep utama dari soal ini untuk menghindari jebakan.</p>
-                    
-                    <div className="bg-indigo-500/10 border border-indigo-500/20 p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-indigo-500/20 transition-colors">
-                       <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white shrink-0 shadow-lg shadow-indigo-500/30">
-                          <i className="fas fa-play"></i>
-                       </div>
-                       <div>
-                          <p className="font-bold text-indigo-300 text-sm">Tonton Video Pembahasan</p>
-                          <p className="text-[0.65rem] text-indigo-400/70">Oleh Master Tutor (02:45)</p>
-                       </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 text-center">
+          <p className="text-slate-400 font-semibold text-sm">
+            Total Soal: <span className="text-white font-bold">{result.total}</span> &bull; Benar: <span className="text-emerald-400 font-bold">{result.correct}</span>
+          </p>
+          <p className="text-xs text-slate-500 mt-2">
+            {result.date ? new Date(result.date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}
+          </p>
         </div>
       </div>
       <NPSModal isOpen={showNPS} onClose={() => setShowNPS(false)} />
