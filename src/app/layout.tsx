@@ -9,6 +9,7 @@ import DynamicHead from "@/components/DynamicHead";
 import SessionGuard from "@/components/SessionGuard";
 import BackToTop from "@/components/ui/BackToTop";
 import PushNotification from "@/components/ui/PushNotification";
+import BGMPlayer from "@/components/ui/BGMPlayer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -56,6 +57,7 @@ export default function RootLayout({
           <BottomNav />
           <PWAInstallPrompt />
           <PushNotification />
+          <BGMPlayer />
           <BackToTop />
         </div>
       </body>
